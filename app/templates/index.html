@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 100vh; }
+        
+        /* Custom CSS for flag markers */
+        .flag-icon {
+            position: relative;
+            background-color: #ff5722;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .flag-icon::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 0;
+            height: 0;
+            border-left: 6px solid #ff5722;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            transform: translateX(-100%) translateY(-50%);
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        const map = L.map('map').setView([41.9028, 12.4964], 12); // Centered on Rome
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let vehicleMarkers = {};
+
+        function updateVehiclePositions() {
+            const bounds = map.getBounds();
+            const params = new URLSearchParams({
+                north: bounds.getNorth(),
+                south: bounds.getSouth(),
+                east: bounds.getEast(),
+                west: bounds.getWest()
+            });
+
+            fetch(`/get_vehicle_positions?${params}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+
+                    // Clear old markers
+                    for (const marker of Object.values(vehicleMarkers)) {
+                        map.removeLayer(marker);
+                    }
+                    vehicleMarkers = {};
+
+                    // Add new vehicle markers as flags
+                    data.forEach(vehicle => {
+                        const flagIcon = L.divIcon({
+                            className: 'flag-icon',
+                            html: vehicle.route_id,
+                            iconSize: [50, 20],
+                            iconAnchor: [25, 20]
+                        });
+
+                        const marker = L.marker([vehicle.lat, vehicle.lon], { icon: flagIcon })
+                            .bindPopup(`Vehicle ID: ${vehicle.vehicle_id}<br>Route ID: ${vehicle.route_id}`);
+                        
+                        marker.addTo(map);
+                        vehicleMarkers[vehicle.vehicle_id] = marker;
+                    });
+                });
+        }
+
+        map.on('moveend', updateVehiclePositions);
+        updateVehiclePositions();
+    </script>
+</body>
+</html>
