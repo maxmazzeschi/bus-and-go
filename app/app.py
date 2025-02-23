@@ -28,6 +28,7 @@ def get_vehicle_positions():
             if south <= v['lat'] <= north and west <= v['lon'] <= east and
             (not selected_routes or v['route_id'] in selected_routes)
         ]
+    print(f'Filtered vehicles: {len(filtered_vehicles)}')
     return jsonify(filtered_vehicles)
 
 @app.route('/get_available_routes')
