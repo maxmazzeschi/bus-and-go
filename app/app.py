@@ -42,6 +42,7 @@ def update_vehicle_positions():
     global vehicles
     url = 'https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb'
     while True:
+        print('Updating vehicle positions...')
         feed = gtfs_realtime_pb2.FeedMessage()
         response = requests.get(url)
         feed.ParseFromString(response.content)
@@ -60,6 +61,7 @@ def update_vehicle_positions():
                 })
         with vehicles_lock:
             vehicles = new_vehicles
+        print(f'Updated vehicle positions: {len(vehicles)}')
         # print(f'Vehicles: {vehicles}')
         time.sleep(60)
 
