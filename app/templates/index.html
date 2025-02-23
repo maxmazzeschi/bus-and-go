@@ -4,10 +4,41 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        #map { height: 100vh; }
-        
-        /* Custom CSS for flag markers */
-        .flag-icon {
+        #map { height: 90vh; position: relative; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            border: 1px solid #ddd;
+            z-index: 1001;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .dropdown-content label {
+            display: block;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .dropdown-content label:hover {
+            background-color: #f1f1f1;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+         /* Custom CSS for flag markers */
+         .flag-icon {
             position: relative;
             background-color: #ff5722;
             color: white;
@@ -31,23 +62,58 @@
     </style>
 </head>
 <body>
-    <div id="map"></div>
+    <div id="map">
+        <div id="controls">
+            <label for="routeSelector">Select Routes:</label>
+            <div class="dropdown">
+                <button>Select Routes ▼</button>
+                <div id="routeSelector" class="dropdown-content">
+                    <!-- Route options with checkboxes will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const map = L.map('map').setView([41.9028, 12.4964], 12); // Centered on Rome
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
+        let map;
         let vehicleMarkers = {};
+
+        function initializeMap() {
+            map = L.map('map');
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const { latitude, longitude } = position.coords;
+                    map.setView([latitude, longitude], 14);
+                }, () => {
+                    map.setView([41.9028, 12.4964], 12);
+                });
+            } else {
+                map.setView([41.9028, 12.4964], 12);
+            }
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            map.on('moveend', updateVehiclePositions);
+            map.on('moveend', updateVehiclePositions);
+            
+            // Update every 60 sec
+            setInterval(updateVehiclePositions, 60000);
+        }
 
         function updateVehiclePositions() {
             const bounds = map.getBounds();
+            const selectedRoutes = Array.from(document.querySelectorAll('#routeSelector input[type="checkbox"]:checked'))
+                                        .map(checkbox => checkbox.value);
+
             const params = new URLSearchParams({
                 north: bounds.getNorth(),
                 south: bounds.getSouth(),
                 east: bounds.getEast(),
-                west: bounds.getWest()
+                west: bounds.getWest(),
+                routes: selectedRoutes.join(',')
             });
 
             fetch(`/get_vehicle_positions?${params}`)
@@ -55,13 +121,11 @@
                 .then(data => {
                     console.log(data);
 
-                    // Clear old markers
                     for (const marker of Object.values(vehicleMarkers)) {
                         map.removeLayer(marker);
                     }
                     vehicleMarkers = {};
 
-                    // Add new vehicle markers as flags
                     data.forEach(vehicle => {
                         const flagIcon = L.divIcon({
                             className: 'flag-icon',
@@ -72,15 +136,41 @@
 
                         const marker = L.marker([vehicle.lat, vehicle.lon], { icon: flagIcon })
                             .bindPopup(`Vehicle ID: ${vehicle.vehicle_id}<br>Route ID: ${vehicle.route_id}`);
-                        
                         marker.addTo(map);
                         vehicleMarkers[vehicle.vehicle_id] = marker;
                     });
                 });
         }
 
-        map.on('moveend', updateVehiclePositions);
-        updateVehiclePositions();
+        function populateRouteSelector(routeIds) {
+    const routeSelector = document.getElementById('routeSelector');
+    routeSelector.innerHTML = '';
+    routeIds.sort().forEach(routeId => {  // Sort route IDs alphabetically
+        const label = document.createElement('label');
+        label.innerHTML = `
+            <input type="checkbox" value="${routeId}" />
+            ${routeId}
+        `;
+        routeSelector.appendChild(label);
+    });
+}
+
+
+        function fetchAvailableRoutes() {
+            fetch('/get_available_routes')
+                .then(response => response.json())
+                .then(routeIds => {
+                    populateRouteSelector(routeIds);
+                });
+        }
+
+        window.onload = () => {
+            initializeMap();
+            fetchAvailableRoutes();
+            updateVehiclePositions();
+            document.getElementById('routeSelector').addEventListener('change', updateVehiclePositions);
+
+        };
     </script>
 </body>
 </html>
