@@ -10,7 +10,7 @@
     <div id="map">
         <div id="controls">
             <label for="routeSelector">Select Routes:</label>
-            <div class="dropdown">
+            <div class="dropdown" onchange="updateVehiclePositions()">
                 <button>Select Routes ▼</button>
                 <div id="routeSelector" class="dropdown-content">
                     <!-- Route options with checkboxes will be populated dynamically -->
