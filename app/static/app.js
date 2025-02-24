@@ -76,7 +76,7 @@ function updateVehiclePositions() {
           iconAnchor: [-10, 10],
         });
 
-        L.marker([lat, lon], { icon: label }).addTo(map);
+        const labelMarker = L.marker([lat, lon], { icon: label }).addTo(map);
         /*
 // Improved arrow using SVG
 const arrowHtml = `
@@ -98,7 +98,9 @@ const arrowMarker = L.marker([lat, lon], { icon: arrow })
 // Rotate the arrow based on the bearing
 arrowMarker.getElement().style.transform = `rotate(${bearing}deg)`;
 */
+        // Store the marker and label references
         vehicleMarkers[vehicle_id] = marker;
+        vehicleLabels[vehicle_id] = labelMarker;
       });
     });
 }
