@@ -9,7 +9,10 @@ class Vehicles:
     def __init__(self):
         self.vehicles = []
         self.vehicles_lock = threading.Lock()
-        self.url = "https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb"
+        self.url = (
+            "https://romamobilita.it/sites/default/files/"
+            "rome_rtgtfs_vehicle_positions_feed.pb"
+        )
         self.update_vehicle_positions()
         self.update_thread = threading.Thread(target=self.update_loop)
         self.update_thread.daemon = True
