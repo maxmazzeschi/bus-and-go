@@ -16,6 +16,7 @@ def index():
 
 @app.route('/get_vehicle_positions')
 def get_vehicle_positions():
+    update_vehicle_positions()
     north = float(request.args.get('north', 90))
     south = float(request.args.get('south', -90))
     east = float(request.args.get('east', 180))
@@ -33,6 +34,7 @@ def get_vehicle_positions():
 
 @app.route('/get_available_routes')
 def get_available_routes():
+    update_vehicle_positions()
     with vehicles_lock:
         route_ids = list({v['route_id'] for v in vehicles})
     return jsonify(route_ids)
@@ -63,13 +65,13 @@ def update_vehicle_positions():
             vehicles = new_vehicles
         print(f'Updated vehicle positions: {len(vehicles)}')
         # print(f'Vehicles: {vehicles}')
-        time.sleep(60)
+        # time.sleep(60)
 
 
 # Start the update in a separate thread
-thread = threading.Thread(target=update_vehicle_positions)
-thread.daemon = True
-thread.start()
+#thread = threading.Thread(target=update_vehicle_positions)
+#thread.daemon = True
+#thread.start()
 
 
 
