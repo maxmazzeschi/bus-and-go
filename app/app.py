@@ -70,7 +70,7 @@ def update_vehicle_positions():
 thread = threading.Thread(target=update_vehicle_positions)
 thread.daemon = True
 thread.start()
-thread.join()
+
 
 
 if __name__ == '__main__':
