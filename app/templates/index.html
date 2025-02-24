@@ -50,6 +50,13 @@
             font-size: 12px;
             color: #333;
         }
+        /* Bigger font size for mobile devices including iPhone 13 and newer */
+    @media only screen and (max-width: 768px),
+    (max-device-width: 430px) and (-webkit-device-pixel-ratio: 3) {
+        .vehicle-label {
+            font-size: 24x;
+        }
+}
 
         /* Updated CSS for the arrow icon */
 .arrow-icon {
@@ -136,7 +143,7 @@
 
                     data.forEach(vehicle => {
     const { lat, lon, route_id, bearing, speed, vehicle_id } = vehicle;
-console.log(vehicle);
+//console.log(vehicle);
     // Create a circle marker for the vehicle's position
     const marker = L.circleMarker([lat, lon], {
         radius: 8,
