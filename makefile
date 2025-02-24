@@ -1,5 +1,5 @@
 fmt:
-	npx prettier --write app/static/app.js
+	npx prettier --write app/static/*
 	black app
 	flake8 app
 

@@ -1,70 +1,84 @@
-#map { height: 90vh; position: relative; }
-#controls {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 1000;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+#map {
+  height: 90vh;
+  position: relative;
 }
-.dropdown { position: relative; display: inline-block; }
+#controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
 .dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: white;
-    min-width: 160px;
-    border: 1px solid #ddd;
-    z-index: 1001;
-    max-height: 200px;
-    overflow-y: auto;
+  display: none;
+  position: absolute;
+  background-color: white;
+  min-width: 160px;
+  border: 1px solid #ddd;
+  z-index: 1001;
+  max-height: 200px;
+  overflow-y: auto;
 }
 .dropdown-content label {
-    display: block;
-    padding: 5px;
-    cursor: pointer;
+  display: block;
+  padding: 5px;
+  cursor: pointer;
 }
 .dropdown-content label:hover {
-    background-color: #f1f1f1;
+  background-color: #f1f1f1;
 }
 .dropdown:hover .dropdown-content {
-    display: block;
+  display: block;
 }
 
 /* Custom CSS for vehicle label and arrow */
 .vehicle-label {
-    position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(221, 235, 22, 0.7);
-    padding: 2px 2px;
-    border-radius: 3px;
-    font-size: 12px;
-    color: #333;
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(221, 235, 22, 0.7);
+  padding: 2px 2px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #333;
 }
 /* Bigger font size for mobile devices including iPhone 13 and newer */
 /* Apply bigger font size for all mobile devices */
 @media only screen and (pointer: coarse) {
-.vehicle-label {
+  .vehicle-label {
     font-size: 24px;
+  }
 }
-}
-
 
 /* Updated CSS for the arrow icon */
 .arrow-icon {
-width: 20px;
-height: 20px;
-display: inline-block;
-transform-origin: center;
-z-index: 100;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  transform-origin: center;
+  z-index: 100;
 }
 
 /* Optional styling for better visibility */
 .arrow-svg {
-fill: #ff5722;
-stroke: #333;
-stroke-width: 1px;
+  fill: #ff5722;
+  stroke: #333;
+  stroke-width: 1px;
+}
+
+.timer {
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  color: #333;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
 }

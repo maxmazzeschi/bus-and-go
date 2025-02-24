@@ -1,6 +1,9 @@
 let map;
 let vehicleMarkers = {};
 let vehicleLabels = {};
+let updateInterval = 60; // Update every 60 seconds
+let remainingTime = updateInterval;
+let timerInterval;
 
 function initializeMap() {
   map = L.map("map");
@@ -25,8 +28,34 @@ function initializeMap() {
 
   map.on("moveend", updateVehiclePositions);
 
+  // Add a timer display to the map
+  const timerDiv = L.control({ position: "topright" });
+  timerDiv.onAdd = () => {
+    const div = L.DomUtil.create("div", "timer");
+    div.innerHTML = `Next update in: ${remainingTime}s`;
+    return div;
+  };
+  timerDiv.addTo(map);
+
   // Update every 60 sec
-  setInterval(updateVehiclePositions, 60000);
+  setInterval(updateVehiclePositions, updateInterval * 1000);
+  startTimer();
+}
+
+function startTimer() {
+  remainingTime = updateInterval;
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    remainingTime--;
+    const timerElement = document.querySelector(".timer");
+    if (timerElement) {
+      timerElement.innerHTML = `Next update in: ${remainingTime}s`;
+    }
+    if (remainingTime <= 0) {
+      clearInterval(timerInterval);
+    }
+  }, 1000);
 }
 
 function updateVehiclePositions() {
@@ -110,6 +139,8 @@ function updateVehiclePositions() {
 
         vehicleLabels[vehicle_id] = labelMarker;
       });
+      // Reset timer on update
+      startTimer();
     });
 }
 
