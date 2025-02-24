@@ -17,8 +17,12 @@ class Vehicles:
 
     def update_vehicle_positions(self):
         feed = gtfs_realtime_pb2.FeedMessage()
-        response = requests.get(self.url)
-        feed.ParseFromString(response.content)
+        try:
+            response = requests.get(self.url)
+            feed.ParseFromString(response.content)
+        except Exception as e:
+            print(f"Error fetching vehicle positions: {e}")
+            return
         new_vehicles = []
         for entity in feed.entity:
             if entity.HasField("vehicle"):
@@ -40,7 +44,7 @@ class Vehicles:
                 )
         with self.vehicles_lock:
             self.vehicles = new_vehicles
-        print(f"Updated vehicle positions: {len(self.vehicles)}")
+        # print(f"Updated vehicle positions: {len(self.vehicles)}")
 
     def update_loop(self):
         while True:
@@ -61,7 +65,6 @@ class Vehicles:
                 and west <= v["lon"] <= east
                 and (not selected_routes or v["route_id"] in selected_routes)
             ]
-        print(f"Filtered vehicles: {len(filtered_vehicles)}")
         return filtered_vehicles
 
     def get_available_routes(self):
