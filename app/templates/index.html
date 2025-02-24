@@ -93,6 +93,7 @@
     <script>
         let map;
         let vehicleMarkers = {};
+        let vehicleLabels = {};
 
         function initializeMap() {
             map = L.map('map');
@@ -140,8 +141,11 @@
                     for (const marker of Object.values(vehicleMarkers)) {
                         map.removeLayer(marker);
                     }
+                    for (const label of Object.values(vehicleLabels)) {
+            map.removeLayer(label);
+        }
                     vehicleMarkers = {};
-
+                    vehicleLabels = {};
                     data.forEach(vehicle => {
     const { lat, lon, route_id, bearing, speed, vehicle_id } = vehicle;
 //console.log(vehicle);
