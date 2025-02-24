@@ -61,12 +61,7 @@ function updateVehiclePositions() {
         const { lat, lon, route_id, bearing, speed, vehicle_id } = vehicle;
         //console.log(vehicle);
         // Create a circle marker for the vehicle's position
-        const marker = L.circleMarker([lat, lon], {
-          radius: 8,
-          color: "#ff5722",
-          fillColor: "#ff5722",
-          fillOpacity: 0.7,
-        }).addTo(map);
+        
 
         // Add route label
         const label = L.divIcon({
@@ -77,7 +72,9 @@ function updateVehiclePositions() {
         });
 
         const labelMarker = L.marker([lat, lon], { icon: label }).addTo(map);
-        /*
+
+        if (speed > 0) {
+          
 // Improved arrow using SVG
 const arrowHtml = `
 <svg class="arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
@@ -96,10 +93,24 @@ const arrowMarker = L.marker([lat, lon], { icon: arrow })
 .addTo(map);
 
 // Rotate the arrow based on the bearing
-arrowMarker.getElement().style.transform = `rotate(${bearing}deg)`;
-*/
+approx_angle = Math.round(bearing);
+arrowMarker.getElement().style.transform = `rotate(${approx_angle}deg)`;
+vehicleMarkers[vehicle_id] = arrowMarker;
+
+        }
+        else
+       {
+        const marker = L.circleMarker([lat, lon], {
+            radius: 8,
+            color: "#ff5722",
+            fillColor: "#ff5722",
+            fillOpacity: 0.7,
+          }).addTo(map);
+          vehicleMarkers[vehicle_id] = marker;
+        }
+        
         // Store the marker and label references
-        vehicleMarkers[vehicle_id] = marker;
+        
         vehicleLabels[vehicle_id] = labelMarker;
       });
     });
