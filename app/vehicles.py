@@ -26,12 +26,16 @@ class Vehicles:
                 route_id = entity.vehicle.trip.route_id
                 latitude = entity.vehicle.position.latitude
                 longitude = entity.vehicle.position.longitude
+                bearing = entity.vehicle.position.bearing
+                speed = entity.vehicle.position.speed
                 new_vehicles.append(
                     {
                         "vehicle_id": vehicle_id,
                         "route_id": route_id,
                         "lat": latitude,
                         "lon": longitude,
+                        "bearing": bearing,
+                        "speed": speed,
                     }
                 )
         with self.vehicles_lock:

@@ -37,28 +37,36 @@
         .dropdown:hover .dropdown-content {
             display: block;
         }
-         /* Custom CSS for flag markers */
-         .flag-icon {
-            position: relative;
-            background-color: #ff5722;
-            color: white;
-            padding: 2px 6px;
+
+        /* Custom CSS for vehicle label and arrow */
+        .vehicle-label {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(221, 235, 22, 0.7);
+            padding: 2px 2px;
             border-radius: 3px;
             font-size: 12px;
-            white-space: nowrap;
+            color: #333;
         }
-        .flag-icon::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            width: 0;
-            height: 0;
-            border-left: 6px solid #ff5722;
-            border-top: 6px solid transparent;
-            border-bottom: 6px solid transparent;
-            transform: translateX(-100%) translateY(-50%);
-        }
+
+        /* Updated CSS for the arrow icon */
+.arrow-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    transform-origin: center;
+    z-index: 100;
+}
+
+/* Optional styling for better visibility */
+.arrow-svg {
+    fill: #ff5722;
+    stroke: #333;
+    stroke-width: 1px;
+}
+
     </style>
 </head>
 <body>
@@ -97,8 +105,7 @@
             }).addTo(map);
 
             map.on('moveend', updateVehiclePositions);
-            map.on('moveend', updateVehiclePositions);
-            
+
             // Update every 60 sec
             setInterval(updateVehiclePositions, 60000);
         }
@@ -121,40 +128,71 @@
                 .then(data => {
                     console.log(data);
 
+                    // Remove previous markers
                     for (const marker of Object.values(vehicleMarkers)) {
                         map.removeLayer(marker);
                     }
                     vehicleMarkers = {};
 
                     data.forEach(vehicle => {
-                        const flagIcon = L.divIcon({
-                            className: 'flag-icon',
-                            html: vehicle.route_id,
-                            iconSize: [50, 20],
-                            iconAnchor: [25, 20]
-                        });
+    const { lat, lon, route_id, bearing, speed, vehicle_id } = vehicle;
+console.log(vehicle);
+    // Create a circle marker for the vehicle's position
+    const marker = L.circleMarker([lat, lon], {
+        radius: 8,
+        color: '#ff5722',
+        fillColor: '#ff5722',
+        fillOpacity: 0.7
+    }).addTo(map);
 
-                        const marker = L.marker([vehicle.lat, vehicle.lon], { icon: flagIcon })
-                            .bindPopup(`Vehicle ID: ${vehicle.vehicle_id}<br>Route ID: ${vehicle.route_id}`);
-                        marker.addTo(map);
-                        vehicleMarkers[vehicle.vehicle_id] = marker;
-                    });
+    // Add route label
+    const label = L.divIcon({
+        className: 'vehicle-label',
+        html: route_id + "@" + speed + " Km/h",
+        iconSize: [90, 25],
+        iconAnchor: [-10, 10]
+    });
+
+    L.marker([lat, lon], { icon: label }).addTo(map);
+/*
+    // Improved arrow using SVG
+    const arrowHtml = `
+        <svg class="arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+            <polygon points="12,2 22,22 12,17 2,22" />
+        </svg>
+    `;
+
+    const arrow = L.divIcon({
+        className: 'arrow-icon',
+        html: arrowHtml,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+    });
+    
+    const arrowMarker = L.marker([lat, lon], { icon: arrow })
+        .addTo(map);
+
+    // Rotate the arrow based on the bearing
+    arrowMarker.getElement().style.transform = `rotate(${bearing}deg)`;
+    */
+    vehicleMarkers[vehicle_id] = marker;
+});
+
                 });
         }
 
         function populateRouteSelector(routeIds) {
-    const routeSelector = document.getElementById('routeSelector');
-    routeSelector.innerHTML = '';
-    routeIds.sort().forEach(routeId => {  // Sort route IDs alphabetically
-        const label = document.createElement('label');
-        label.innerHTML = `
-            <input type="checkbox" value="${routeId}" />
-            ${routeId}
-        `;
-        routeSelector.appendChild(label);
-    });
-}
-
+            const routeSelector = document.getElementById('routeSelector');
+            routeSelector.innerHTML = '';
+            routeIds.sort().forEach(routeId => {  // Sort route IDs alphabetically
+                const label = document.createElement('label');
+                label.innerHTML = `
+                    <input type="checkbox" value="${routeId}" />
+                    ${routeId}
+                `;
+                routeSelector.appendChild(label);
+            });
+        }
 
         function fetchAvailableRoutes() {
             fetch('/get_available_routes')
@@ -169,7 +207,6 @@
             fetchAvailableRoutes();
             updateVehiclePositions();
             document.getElementById('routeSelector').addEventListener('change', updateVehiclePositions);
-
         };
     </script>
 </body>
