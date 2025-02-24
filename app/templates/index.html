@@ -51,12 +51,13 @@
             color: #333;
         }
         /* Bigger font size for mobile devices including iPhone 13 and newer */
-    @media only screen and (max-width: 768px),
-    (max-device-width: 430px) and (-webkit-device-pixel-ratio: 3) {
+     /* Apply bigger font size for all mobile devices */
+     @media only screen and (pointer: coarse) {
         .vehicle-label {
-            font-size: 24x;
+            font-size: 24px;
         }
-}
+    }
+
 
         /* Updated CSS for the arrow icon */
 .arrow-icon {
