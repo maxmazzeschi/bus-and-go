@@ -61,7 +61,6 @@ function updateVehiclePositions() {
         const { lat, lon, route_id, bearing, speed, vehicle_id } = vehicle;
         //console.log(vehicle);
         // Create a circle marker for the vehicle's position
-        
 
         // Add route label
         const label = L.divIcon({
@@ -74,33 +73,31 @@ function updateVehiclePositions() {
         const labelMarker = L.marker([lat, lon], { icon: label }).addTo(map);
 
         if (speed > 0) {
-          
-// Improved arrow using SVG
-const arrowHtml = `
-<svg class="arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-    <polygon points="12,2 22,22 12,17 2,22" />
-</svg>
-`;
+          // Improved arrow using SVG
+          const arrowHtml = `
+            <svg class="arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+              <polygon points="12,2 22,22 12,17 2,22" />
+            </svg>
+          `;
 
-const arrow = L.divIcon({
-className: 'arrow-icon',
-html: arrowHtml,
-iconSize: [24, 24],
-iconAnchor: [12, 12]
-});
+          const arrow = L.divIcon({
+            className: "arrow-icon",
+            html: arrowHtml,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12], // Anchor point at the center of the arrow
+          });
 
-const arrowMarker = L.marker([lat, lon], { icon: arrow })
-.addTo(map);
+          // Create an arrow marker at the correct lat, lon
+          const arrowMarker = L.marker([lat, lon], { icon: arrow }).addTo(map);
 
-// Rotate the arrow based on the bearing
-approx_angle = Math.round(bearing);
-arrowMarker.getElement().style.transform = `rotate(${approx_angle}deg)`;
-vehicleMarkers[vehicle_id] = arrowMarker;
+          // Rotate the arrow based on the bearing
+          const approx_angle = Math.round(bearing); // Round the bearing to an integer if necessary
+          arrowMarker.getElement().style.transform = `rotate(${approx_angle}deg)`;
 
-        }
-        else
-       {
-        const marker = L.circleMarker([lat, lon], {
+          // Store the arrow marker
+          vehicleMarkers[vehicle_id] = arrowMarker;
+        } else {
+          const marker = L.circleMarker([lat, lon], {
             radius: 8,
             color: "#ff5722",
             fillColor: "#ff5722",
@@ -108,18 +105,35 @@ vehicleMarkers[vehicle_id] = arrowMarker;
           }).addTo(map);
           vehicleMarkers[vehicle_id] = marker;
         }
-        
+
         // Store the marker and label references
-        
+
         vehicleLabels[vehicle_id] = labelMarker;
       });
     });
 }
 
+function compareRouteId(a, b) {
+    va = parseInt(a);
+    vb = parseInt(b);
+    if (va == NaN && vb == NaN) {
+        return a < b ? -1 : 1;
+    }
+    if (va == NaN) {
+        return 1;
+    }
+    if (vb == NaN) {
+        return -1;
+    }
+    return va - vb;
+
+    
+}
+
 function populateRouteSelector(routeIds) {
   const routeSelector = document.getElementById("routeSelector");
   routeSelector.innerHTML = "";
-  routeIds.sort().forEach((routeId) => {
+  routeIds.sort(compareRouteId).forEach((routeId) => {
     // Sort route IDs alphabetically
     const label = document.createElement("label");
     label.innerHTML = `
