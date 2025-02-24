@@ -72,7 +72,7 @@ function updateVehiclePositions() {
 
         const labelMarker = L.marker([lat, lon], { icon: label }).addTo(map);
 
-        if (speed > 0) {
+        if (false && speed > 0) {
           // Improved arrow using SVG
           const arrowHtml = `
             <svg class="arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
@@ -114,20 +114,18 @@ function updateVehiclePositions() {
 }
 
 function compareRouteId(a, b) {
-    va = parseInt(a);
-    vb = parseInt(b);
-    if (va == NaN && vb == NaN) {
-        return a < b ? -1 : 1;
-    }
-    if (va == NaN) {
-        return 1;
-    }
-    if (vb == NaN) {
-        return -1;
-    }
-    return va - vb;
-
-    
+  va = parseInt(a);
+  vb = parseInt(b);
+  if (va == NaN && vb == NaN) {
+    return a < b ? -1 : 1;
+  }
+  if (va == NaN) {
+    return 1;
+  }
+  if (vb == NaN) {
+    return -1;
+  }
+  return va - vb;
 }
 
 function populateRouteSelector(routeIds) {
