@@ -106,8 +106,8 @@ function updateVehiclePositions() {
         // Add route label
         const label = L.divIcon({
           className: "vehicle-label",
-          html: route_id + ((speed>0)?"@" + speed + " Km/h":""),
-          iconSize: speed>0?[90, 15]:[30, 15],
+          html: route_id + (speed > 0 ? "@" + speed + " Km/h" : ""),
+          iconSize: speed > 0 ? [90, 15] : [30, 15],
           iconAnchor: [-10, 10],
         });
 
