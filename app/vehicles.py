@@ -7,7 +7,8 @@ import threading
 class Vehicles:
 
     def __init__(self):
-        self.vehicles = []
+        self.vehicle_list = []
+        self.last_update = 0
         self.vehicles_lock = threading.Lock()
         self.url = (
             "https://romamobilita.it/sites/default/files/"
@@ -23,6 +24,10 @@ class Vehicles:
         try:
             response = requests.get(self.url)
             feed.ParseFromString(response.content)
+            last_update = int(feed.header.timestamp)
+            if last_update == self.last_update:
+                return
+            self.last_update = feed.header.timestamp
         except Exception as e:
             print(f"Error fetching vehicle positions: {e}")
             return
@@ -46,7 +51,7 @@ class Vehicles:
                     }
                 )
         with self.vehicles_lock:
-            self.vehicles = new_vehicles
+            self.vehicle_list = new_vehicles
         # print(f"Updated vehicle positions: {len(self.vehicles)}")
 
     def update_loop(self):
@@ -63,18 +68,14 @@ class Vehicles:
         with self.vehicles_lock:
             filtered_vehicles = [
                 v
-                for v in self.vehicles
+                for v in self.vehicle_list
                 if south <= v["lat"] <= north
                 and west <= v["lon"] <= east
                 and (not selected_routes or v["route_id"] in selected_routes)
             ]
-        return filtered_vehicles
+        return {"last_update": self.last_update, "vehicles": filtered_vehicles}
 
     def get_available_routes(self):
         with self.vehicles_lock:
-            route_ids = list({v["route_id"] for v in self.vehicles})
+            route_ids = list({v["route_id"] for v in self.vehicle_list})
         return route_ids
-
-    def get_vehicles(self):
-        with self.vehicles_lock:
-            return self.vehicles

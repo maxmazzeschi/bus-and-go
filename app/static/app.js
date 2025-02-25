@@ -76,7 +76,18 @@ function updateVehiclePositions() {
     .then((response) => response.json())
     .then((data) => {
       console.log(data);
+      const date = new Date(data.last_update * 1000); // Multiply by 1000 to convert seconds to milliseconds
 
+      // Format the date to a human-readable string
+      const humanReadableDate = date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      console.log(humanReadableDate);
       // Remove previous markers
       for (const marker of Object.values(vehicleMarkers)) {
         map.removeLayer(marker);
@@ -86,7 +97,8 @@ function updateVehiclePositions() {
       }
       vehicleMarkers = {};
       vehicleLabels = {};
-      data.forEach((vehicle) => {
+      vehicles = data.vehicles;
+      vehicles.forEach((vehicle) => {
         const { lat, lon, route_id, bearing, speed, vehicle_id } = vehicle;
         //console.log(vehicle);
         // Create a circle marker for the vehicle's position
