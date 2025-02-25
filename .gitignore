@@ -171,3 +171,7 @@ cython_debug/
 .pypirc
 
 node_modules/
+
+/datasets/*.zip
+/datasets/*.txt
+!/datasets/*.sql
