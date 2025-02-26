@@ -193,8 +193,34 @@ function fetchAvailableRoutes() {
     });
 }
 
+
+function populateDatasetSelector(datasets) {
+    const datasetSelector = document.getElementById("datasetSelector");
+    datasetSelector.innerHTML = "";
+    console.log( datasets[0]);
+    datasets.forEach((dataset) => {
+      // Sort datasets IDs alphabetically
+      const label = document.createElement("label");
+      label.innerHTML = `
+              <input type="checkbox" value="${dataset}" />
+              ${dataset}
+          `;
+      datasetSelector.appendChild(label);
+    });
+  }
+
+  
+function fetchAvailableDatasets() {
+    fetch("/get_available_datasets")
+      .then((response) => response.json())
+      .then((routeIds) => {
+        populateDatasetSelector(routeIds);
+      });
+  }
+
 window.onload = () => {
   initializeMap();
+  fetchAvailableDatasets();
   fetchAvailableRoutes();
   updateVehiclePositions();
   document

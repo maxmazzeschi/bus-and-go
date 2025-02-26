@@ -10,13 +10,21 @@
   <script src="{{ url_for('static', filename='app.js') }}"></script>
   <div id="map">
     <div id="controls">
+        <label for="datasets">Select Dataset:</label>
+      <div class="dropdown" onchange="changeDataset()">
+        <button>Datasets ▼</button>
+        <div id="datasetSelector" class="dropdown-content">
+          <!-- Dataset options with checkboxes will be populated dynamically -->
+        </div>
+    </div>
       <label for="routeSelector">Select Routes:</label>
       <div class="dropdown" onchange="updateVehiclePositions()">
         <button>Select Routes ▼</button>
         <div id="routeSelector" class="dropdown-content">
           <!-- Route options with checkboxes will be populated dynamically -->
         </div>
-      </div>
+        
+     
     </div>
   </div>
 </body>
