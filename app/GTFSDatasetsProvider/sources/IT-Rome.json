@@ -1,0 +1,6 @@
+{
+    "name" : "Rome",
+    "id": "abc123",
+    "vehicle_positions_url": "https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb",
+    "static_gtfs_url" : "https://dati.comune.roma.it/catalog/dataset/a7dadb4a-66ae-4eff-8ded-a102064702ba/resource/266d82e1-ba53-4510-8a81-370880c4678f/download/rome_static_gtfs_test.zip"
+}

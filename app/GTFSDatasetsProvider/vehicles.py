@@ -5,15 +5,11 @@ import threading
 
 
 class Vehicles:
-
-    def __init__(self):
+    def __init__(self, url):
         self.vehicle_list = []
         self.last_update = 0
         self.vehicles_lock = threading.Lock()
-        self.url = (
-            "https://romamobilita.it/sites/default/files/"
-            "rome_rtgtfs_vehicle_positions_feed.pb"
-        )
+        self.url = url
         self.update_vehicle_positions()
         self.update_thread = threading.Thread(target=self.update_loop)
         self.update_thread.daemon = True
@@ -59,7 +55,7 @@ class Vehicles:
             self.update_vehicle_positions()
             time.sleep(60)
 
-    def get_vehicle_positions(self, north, south, east, west, selected_routes):
+    def get_vehicles_positions(self, north, south, east, west, selected_routes):
         north = float(north)
         south = float(south)
         east = float(east)

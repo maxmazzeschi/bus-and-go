@@ -64,7 +64,12 @@ function updateVehiclePositions() {
     document.querySelectorAll('#routeSelector input[type="checkbox"]:checked'),
   ).map((checkbox) => checkbox.value);
 
+  datasetId = getCurrentDataset();
+  if (datasetId == null) {  
+    return;
+  }
   const params = new URLSearchParams({
+    datasetId: datasetId,
     north: bounds.getNorth(),
     south: bounds.getSouth(),
     east: bounds.getEast(),
@@ -72,10 +77,21 @@ function updateVehiclePositions() {
     routes: selectedRoutes.join(","),
   });
 
-  fetch(`/get_vehicle_positions?${params}`)
+  fetch(`/get_vehicles_positions?${params}`)
     .then((response) => response.json())
     .then((data) => {
       console.log(data);
+      
+      // Remove previous markers
+      for (const marker of Object.values(vehicleMarkers)) {
+        map.removeLayer(marker);
+      }
+      for (const label of Object.values(vehicleLabels)) {
+        map.removeLayer(label);
+      }
+      if (data.length == 0) {
+        return;
+      }
       const date = new Date(data.last_update * 1000); // Multiply by 1000 to convert seconds to milliseconds
 
       // Format the date to a human-readable string
@@ -88,13 +104,6 @@ function updateVehiclePositions() {
         second: "2-digit",
       });
       console.log(humanReadableDate);
-      // Remove previous markers
-      for (const marker of Object.values(vehicleMarkers)) {
-        map.removeLayer(marker);
-      }
-      for (const label of Object.values(vehicleLabels)) {
-        map.removeLayer(label);
-      }
       vehicleMarkers = {};
       vehicleLabels = {};
       vehicles = data.vehicles;
@@ -186,13 +195,43 @@ function populateRouteSelector(routeIds) {
 }
 
 function fetchAvailableRoutes() {
-  fetch("/get_available_routes")
+  datasetId = getCurrentDataset();
+  if (datasetId == null) {
+    return;
+  }
+  const params = new URLSearchParams({
+    datasetId: datasetId
+  });
+
+  console.log("Fetching routes for dataset: " + datasetId);
+  fetch(`/get_available_routes?${params}`)
     .then((response) => response.json())
     .then((routeIds) => {
       populateRouteSelector(routeIds);
     });
 }
 
+function getCurrentDataset() {
+  const selectedDatasets = [];
+  const datasetSelector = document.getElementById("datasetSelector");
+  const checkboxes = datasetSelector.querySelectorAll('input[type="checkbox"]:checked');
+
+  checkboxes.forEach((checkbox) => {
+    const label = checkbox.parentElement;
+    const name = label.textContent.trim();
+    const value = checkbox.value;
+    selectedDatasets.push({ name, value });
+  });
+  if (selectedDatasets.length == 0) {
+    return null;
+  }
+  return selectedDatasets[0].value;
+}
+
+function onChangeDataset() {
+  fetchAvailableRoutes();
+  updateVehiclePositions();
+}
 
 function populateDatasetSelector(datasets) {
     const datasetSelector = document.getElementById("datasetSelector");
@@ -201,9 +240,12 @@ function populateDatasetSelector(datasets) {
     datasets.forEach((dataset) => {
       // Sort datasets IDs alphabetically
       const label = document.createElement("label");
+      dname = dataset.name;
+      dvalue = dataset.id;
+      console.log(dname + " " + dvalue);
       label.innerHTML = `
-              <input type="checkbox" value="${dataset}" />
-              ${dataset}
+              <input type="checkbox" value="${dvalue}" />
+              ${dname}
           `;
       datasetSelector.appendChild(label);
     });
@@ -213,8 +255,8 @@ function populateDatasetSelector(datasets) {
 function fetchAvailableDatasets() {
     fetch("/get_available_datasets")
       .then((response) => response.json())
-      .then((routeIds) => {
-        populateDatasetSelector(routeIds);
+      .then((datasets) => {
+        populateDatasetSelector(datasets);
       });
   }
 
