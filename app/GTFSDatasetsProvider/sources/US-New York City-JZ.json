@@ -1,0 +1,5 @@
+{
+    "name" : "New York City - J,Z",
+    "vehicle_positions_url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz",
+    "static_gtfs_url" : ""
+}

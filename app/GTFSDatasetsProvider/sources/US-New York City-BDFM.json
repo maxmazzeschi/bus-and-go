@@ -1,0 +1,5 @@
+{
+    "name" : "New York City - B,D,F,M",
+    "vehicle_positions_url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm",
+    "static_gtfs_url" : ""
+}

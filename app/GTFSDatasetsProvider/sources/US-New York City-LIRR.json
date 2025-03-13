@@ -1,0 +1,5 @@
+{
+    "name" : "New York City - LIRR",
+    "vehicle_positions_url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/lirr%2Fgtfs-lirr",
+    "static_gtfs_url" : ""
+}

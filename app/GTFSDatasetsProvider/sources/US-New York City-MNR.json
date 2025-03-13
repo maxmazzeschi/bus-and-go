@@ -1,0 +1,5 @@
+{
+    "name" : "New York City - MNR",
+    "vehicle_positions_url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/mnr%2Fgtfs-mnr",
+    "static_gtfs_url" : ""
+}
