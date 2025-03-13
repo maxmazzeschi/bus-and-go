@@ -6,6 +6,7 @@ import threading
 
 class Vehicles:
     def __init__(self, url):
+        self.created_date = time.time()
         self.vehicle_list = []
         self.last_update = 0
         self.vehicles_lock = threading.Lock()
@@ -69,7 +70,9 @@ class Vehicles:
                 and west <= v["lon"] <= east
                 and (not selected_routes or v["route_id"] in selected_routes)
             ]
-        return {"last_update": self.last_update, "vehicles": filtered_vehicles}
+        return {"created_date": self.created_date,
+                "last_update": self.last_update,
+                "vehicles": filtered_vehicles}
 
     def get_available_routes(self):
         with self.vehicles_lock:

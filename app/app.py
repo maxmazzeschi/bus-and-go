@@ -13,9 +13,7 @@ def index():
 @app.route("/get_vehicles_positions")
 def get_vehicles_positions():
     datasetId = request.args.get("datasetId")
-    print(datasetId)
     if not datasetId:
-        print("No datasetId")
         return jsonify([])
     dataset = GTFSDatasetsProvider.get_dataset(datasetId)
     north = float(request.args.get("north", 90))
@@ -26,14 +24,12 @@ def get_vehicles_positions():
     filtered_vehicles = dataset.get_vehicles_positions(
         north, south, east, west, selected_routes
     )
-    print(filtered_vehicles)
     return jsonify(filtered_vehicles)
 
 
 @app.route("/get_available_routes")
 def get_available_routes():
     datasetId = request.args.get("datasetId")
-    print(datasetId)
     if not datasetId:
         return jsonify([])
     dataset = GTFSDatasetsProvider.get_dataset(datasetId)

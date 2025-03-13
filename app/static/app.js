@@ -58,7 +58,15 @@ function startTimer() {
   }, 1000);
 }
 
+function isMapInitialized() {
+  return map && map._loaded && map.getCenter() && map.getZoom() !== undefined;
+}
+
+
 function updateVehiclePositions() {
+  if (isMapInitialized() == false) {
+    return;
+  } 
   const bounds = map.getBounds();
   const selectedRoutes = Array.from(
     document.querySelectorAll('#routeSelector input[type="checkbox"]:checked'),
@@ -80,8 +88,6 @@ function updateVehiclePositions() {
   fetch(`/get_vehicles_positions?${params}`)
     .then((response) => response.json())
     .then((data) => {
-      console.log(data);
-      
       // Remove previous markers
       for (const marker of Object.values(vehicleMarkers)) {
         map.removeLayer(marker);
@@ -92,10 +98,11 @@ function updateVehiclePositions() {
       if (data.length == 0) {
         return;
       }
-      const date = new Date(data.last_update * 1000); // Multiply by 1000 to convert seconds to milliseconds
+      
+      const created_date_ms = new Date(data.created_date * 1000); // Multiply by 1000 to convert seconds to milliseconds
 
       // Format the date to a human-readable string
-      const humanReadableDate = date.toLocaleString("en-US", {
+      const created_date = created_date_ms.toLocaleString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -103,7 +110,19 @@ function updateVehiclePositions() {
         minute: "2-digit",
         second: "2-digit",
       });
-      console.log(humanReadableDate);
+
+      const updated_date_ms = new Date(data.last_update * 1000); // Multiply by 1000 to convert seconds to milliseconds
+
+      // Format the date to a human-readable string
+      const updated_date = updated_date_ms.toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      console.log("created on " + created_date + " updated on " + updated_date);
       vehicleMarkers = {};
       vehicleLabels = {};
       vehicles = data.vehicles;
@@ -168,7 +187,10 @@ function updateVehiclePositions() {
 function compareRouteId(a, b) {
   va = parseInt(a);
   vb = parseInt(b);
-  if (va == NaN && vb == NaN) {
+  if (va != NaN && vb != NaN) {
+    if (va == vb) {
+      return 0;
+    }
     return a < b ? -1 : 1;
   }
   if (va == NaN) {
@@ -177,7 +199,7 @@ function compareRouteId(a, b) {
   if (vb == NaN) {
     return -1;
   }
-  return va - vb;
+  return 0;
 }
 
 function populateRouteSelector(routeIds) {

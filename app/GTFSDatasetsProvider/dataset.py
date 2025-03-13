@@ -9,7 +9,6 @@ import uuid
 class Dataset:
     def __init__(self, provider):
         self.src = provider
-        print(self.src)
         self.vehicle_url = self.src["vehicle_positions_url"]
         self.vehicles = Vehicles(self.vehicle_url)
         response = requests.get(self.src["static_gtfs_url"])
