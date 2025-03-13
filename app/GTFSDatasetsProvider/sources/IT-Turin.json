@@ -1,0 +1,5 @@
+{
+    "name" : "Turin",
+    "vehicle_positions_url": "http://percorsieorari.gtt.to.it/das_gtfsrt/vehicle_position.aspx",
+    "static_gtfs_url" : ""
+}
