@@ -132,6 +132,7 @@ function updateVehiclePositions() {
         // Create a circle marker for the vehicle's position
 
         // Add route label
+        speed = Math.round(speed);
         const label = L.divIcon({
           className: "vehicle-label",
           html: route_id + (speed > 0 ? "@" + speed + " Km/h" : ""),
