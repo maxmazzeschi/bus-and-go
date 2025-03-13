@@ -142,13 +142,13 @@ function updateVehiclePositions() {
 
         const labelMarker = L.marker([lat, lon], { icon: label }).addTo(map);
 
-        if (false && speed > 0) {
+        if (true && bearing > 0) {
           // Improved arrow using SVG
           const arrowHtml = `
-            <svg class="arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-              <polygon points="12,2 22,22 12,17 2,22" />
-            </svg>
-          `;
+  <svg class="arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" style="transform: rotate(${Math.round(bearing)}deg);">
+    <polygon points="12,2 22,22 12,17 2,22" />
+  </svg>
+`; // SVG code for a triangle pointing up
 
           const arrow = L.divIcon({
             className: "arrow-icon",
@@ -159,10 +159,6 @@ function updateVehiclePositions() {
 
           // Create an arrow marker at the correct lat, lon
           const arrowMarker = L.marker([lat, lon], { icon: arrow }).addTo(map);
-
-          // Rotate the arrow based on the bearing
-          const approx_angle = Math.round(bearing); // Round the bearing to an integer if necessary
-          arrowMarker.getElement().style.transform = `rotate(${approx_angle}deg)`;
 
           // Store the arrow marker
           vehicleMarkers[vehicle_id] = arrowMarker;
