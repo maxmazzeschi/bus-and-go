@@ -1,0 +1,5 @@
+{
+    "name" : "Massachusetts Bay",
+    "vehicle_positions_url": "https://cdn.mbta.com/realtime/VehiclePositions.pb",
+    "static_gtfs_url" : ""
+}
