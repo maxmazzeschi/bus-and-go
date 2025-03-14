@@ -10,7 +10,7 @@ class Dataset:
     def __init__(self, provider):
         self.src = provider
         self.vehicle_url = self.src["vehicle_positions_url"]
-        self.vehicles = Vehicles(self.vehicle_url)
+        self.vehicles = Vehicles(self.vehicle_url, self.src["refresh_interval"])
         static_gtfs_url = self.src["static_gtfs_url"]
         if static_gtfs_url:
             response = requests.get(self.src["static_gtfs_url"])

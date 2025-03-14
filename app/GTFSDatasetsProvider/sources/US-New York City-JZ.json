@@ -1,5 +1,8 @@
 {
     "name" : "New York City - J,Z",
     "vehicle_positions_url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz",
-    "static_gtfs_url" : ""
+    "vehicle_positions_url_type": "GTFS-Realtime",
+    "static_gtfs_url" : "",
+    "refresh_interval" : 30,
+    "enabled" : false
 }

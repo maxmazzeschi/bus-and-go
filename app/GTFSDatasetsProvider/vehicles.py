@@ -5,10 +5,11 @@ import threading
 
 
 class Vehicles:
-    def __init__(self, url):
+    def __init__(self, url, refresh_interval):
         self.created_date = time.time()
         self.vehicle_list = []
         self.last_update = 0
+        self.refresh_interval = refresh_interval
         self.vehicles_lock = threading.Lock()
         self.url = url
         self.update_vehicle_positions()
@@ -54,7 +55,7 @@ class Vehicles:
     def update_loop(self):
         while True:
             self.update_vehicle_positions()
-            time.sleep(60)
+            time.sleep(self.refresh_interval)
 
     def get_vehicles_positions(self, north, south, east, west, selected_routes):
         north = float(north)

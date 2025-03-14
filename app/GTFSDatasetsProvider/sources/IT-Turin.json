@@ -1,5 +1,8 @@
 {
     "name" : "Turin",
     "vehicle_positions_url": "http://percorsieorari.gtt.to.it/das_gtfsrt/vehicle_position.aspx",
-    "static_gtfs_url" : ""
+    "static_gtfs_url" : "",
+    "vehicle_positions_url_type": "GTFS-Realtime",
+    "refresh_interval" : 60,
+    "enabled" : true
 }

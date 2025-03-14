@@ -16,6 +16,8 @@ def get_vehicles_positions():
     if not datasetId:
         return jsonify([])
     dataset = GTFSDatasetsProvider.get_dataset(datasetId)
+    if dataset is None:
+        return jsonify([])
     north = float(request.args.get("north", 90))
     south = float(request.args.get("south", -90))
     east = float(request.args.get("east", 180))
@@ -33,6 +35,8 @@ def get_available_routes():
     if not datasetId:
         return jsonify([])
     dataset = GTFSDatasetsProvider.get_dataset(datasetId)
+    if dataset is None:
+        return jsonify([])
     route_ids = dataset.get_available_routes()
     return jsonify(route_ids)
 

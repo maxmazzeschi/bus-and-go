@@ -37,7 +37,7 @@ class GTFSDatasetsProvider:
                                 found = True
                                 break
             if found is False:
-                raise NameError
+                return None
             ds = Dataset(provider)
             datasets[provider_hash] = ds
             return ds
@@ -50,13 +50,15 @@ class GTFSDatasetsProvider:
                 if re.search(r"\.json", os.fsdecode(entry.name)):
                     with open(entry.path) as f:
                         provider = json.load(f)
+                        if not provider["enabled"]:
+                            continue
                         provider_hash = GTFSDatasetsProvider.generate_provider_hash(provider)
                         datasets_list.append(
                             {"name": provider["name"], "id": provider_hash}
                         )
-        print(datasets_list)
+        print(json.dumps(datasets_list, sort_keys=True))
         return datasets_list
-    
+
     @staticmethod
     def generate_provider_hash(provider: dict) -> str:
         provider_str = json.dumps(provider, sort_keys=True)

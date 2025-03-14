@@ -1,5 +1,8 @@
 {
     "name" : "New York City - 1,2,3,4,5,6,7,S",
     "vehicle_positions_url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs",
-    "static_gtfs_url" : ""
+    "vehicle_positions_url_type": "GTFS-Realtime",
+    "static_gtfs_url" : "",
+    "refresh_interval" : 60,
+    "enabled" : false
 }
