@@ -3,6 +3,7 @@ import os
 import zipfile
 import tempfile
 from .vehicles import Vehicles
+from .siri_vehicles import SIRI_Vehicles
 import uuid
 
 
@@ -10,7 +11,18 @@ class Dataset:
     def __init__(self, provider):
         self.src = provider
         self.vehicle_url = self.src["vehicle_positions_url"]
-        self.vehicles = Vehicles(self.vehicle_url, self.src["refresh_interval"])
+        if (provider["vehicle_positions_url_type"] == "SIRI"):
+            keyEnvVar = provider["KEY_ENV_VAR"]
+            if keyEnvVar:
+                print(f"getting {keyEnvVar}")
+                api_key = os.getenv(keyEnvVar)
+                print(f"value is {api_key}")
+                url = self.vehicle_url + api_key
+            else:
+                url = self.vehicle_url
+            self.vehicles = SIRI_Vehicles(url, self.src["refresh_interval"])
+        else:
+            self.vehicles = Vehicles(self.vehicle_url, self.src["refresh_interval"])
         static_gtfs_url = self.src["static_gtfs_url"]
         if static_gtfs_url:
             response = requests.get(self.src["static_gtfs_url"])

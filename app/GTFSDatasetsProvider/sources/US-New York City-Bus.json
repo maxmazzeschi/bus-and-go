@@ -1,0 +1,9 @@
+{
+    "name" : "New York City - BUS",
+    "vehicle_positions_url": "https://bustime.mta.info/api/siri/vehicle-monitoring.json?key=",
+    "vehicle_positions_url_type": "SIRI",
+    "KEY_ENV_VAR":"MTA_API_KEY",
+    "static_gtfs_url" : "",
+    "refresh_interval" : 60,
+    "enabled" : true
+}
