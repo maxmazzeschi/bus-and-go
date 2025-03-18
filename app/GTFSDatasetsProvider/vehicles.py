@@ -5,13 +5,14 @@ import threading
 
 
 class Vehicles:
-    def __init__(self, url, refresh_interval):
+    def __init__(self, url, headers, refresh_interval):
         self.created_date = time.time()
         self.vehicle_list = []
         self.last_update = 0
         self.refresh_interval = refresh_interval
         self.vehicles_lock = threading.Lock()
         self.url = url
+        self.headers = headers
         self.update_vehicle_positions()
         self.update_thread = threading.Thread(target=self.update_loop)
         self.update_thread.daemon = True
@@ -20,7 +21,13 @@ class Vehicles:
     def update_vehicle_positions(self):
         feed = gtfs_realtime_pb2.FeedMessage()
         try:
-            response = requests.get(self.url)
+            if self.headers is not None:
+                response = requests.get(self.url, headers=self.headers)
+            else:
+                response = requests.get(self.url)
+            if response.status_code != 200:
+                print(f"Error {response.status_code} getting data from {self.url}")
+                return
             feed.ParseFromString(response.content)
             last_update = int(feed.header.timestamp)
             if last_update == self.last_update:
@@ -34,6 +41,8 @@ class Vehicles:
             if entity.HasField("vehicle"):
                 vehicle_id = entity.vehicle.vehicle.id
                 route_id = entity.vehicle.trip.route_id
+                if route_id == '':
+                    route_id = entity.vehicle.vehicle.label
                 latitude = entity.vehicle.position.latitude
                 longitude = entity.vehicle.position.longitude
                 bearing = entity.vehicle.position.bearing
@@ -50,7 +59,7 @@ class Vehicles:
                 )
         with self.vehicles_lock:
             self.vehicle_list = new_vehicles
-        # print(f"Updated vehicle positions: {len(self.vehicles)}")
+        print(f"Updated vehicle positions: {len(self.vehicle_list)}")
 
     def update_loop(self):
         while True:
