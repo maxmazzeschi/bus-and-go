@@ -1,8 +1,0 @@
-{
-    "name" : "New York City - N,Q,R,W",
-    "vehicle_positions_url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nqrw",
-    "static_gtfs_url" : "",
-    "vehicle_positions_url_type": "GTFS-Realtime",
-    "refresh_interval" : 30,
-    "enabled" : false
-}

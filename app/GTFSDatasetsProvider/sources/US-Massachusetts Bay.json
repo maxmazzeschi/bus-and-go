@@ -1,9 +1,0 @@
-{
-    "enabled" : true,
-    "name" : "Massachusetts Bay",
-    "vehicle_positions_url": "https://cdn.mbta.com/realtime/VehiclePositions.pb",
-    "vehicle_positions_url_type": "GTFS-Realtime",
-    "refresh_interval" : 60,
-    "static_gtfs_url" : ""
-
-}

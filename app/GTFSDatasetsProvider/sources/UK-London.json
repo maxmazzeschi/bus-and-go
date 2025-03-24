@@ -1,8 +1,0 @@
-{
-    "name" : "London",
-    "vehicle_positions_url": "https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb",
-    "static_gtfs_url" : "",
-    "vehicle_positions_url_type": "TFL",
-    "refresh_interval" : 60,
-    "enabled" : false
-}
