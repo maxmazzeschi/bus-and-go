@@ -39,19 +39,19 @@ def get_routes_info():
     info = dataset.get_routes_info()
     return jsonify(info)
 
+
 @app.route("/get_available_countries")
 def get_available_datasets():
     available_countries = DatasetsProvider.get_available_countries()
-    print(available_countries)
     return list(available_countries)
+
 
 @app.route("/get_available_cities")
 def get_available_cities():
     country = request.args.get("country")
     available_cities = DatasetsProvider.get_datasets_by_country(country)
-    print(available_cities)
-    print (type(available_cities))
     return jsonify(available_cities)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
