@@ -72,7 +72,7 @@ function updateVehiclePositions() {
     document.querySelectorAll('#routeSelector input[type="checkbox"]:checked'),
   ).map((checkbox) => checkbox.value);
 
-  datasetId = getCurrentDataset();
+  datasetId = getCurrentCity();
   if (datasetId == null) {  
     return;
   }
@@ -85,7 +85,7 @@ function updateVehiclePositions() {
     routes: selectedRoutes.join(","),
   });
 
-  fetch(`/get_vehicles_positions?${params}`)
+  fetch(`/get_vehicles_position?${params}`)
     .then((response) => response.json())
     .then((data) => {
       // Remove previous markers
@@ -213,8 +213,10 @@ function populateRouteSelector(routeIds) {
   });
 }
 
+
+// Routes
 function fetchAvailableRoutes() {
-  datasetId = getCurrentDataset();
+  datasetId = getCurrentCity();
   if (datasetId == null) {
     return;
   }
@@ -223,67 +225,118 @@ function fetchAvailableRoutes() {
   });
 
   console.log("Fetching routes for dataset: " + datasetId);
-  fetch(`/get_available_routes?${params}`)
+  fetch(`/get_routes_info?${params}`)
     .then((response) => response.json())
-    .then((routeIds) => {
-      populateRouteSelector(routeIds);
+    .then((route_info) => {
+      populateRouteSelector(route_info.route_ids);
+      lat = (route_info.min_latitude + route_info.max_latitude)/2
+      lon = (route_info.min_longitude + route_info.max_longitude)/2
+      map.setView([lat, lon], 12);
     });
 }
 
-function getCurrentDataset() {
-  const selectedDatasets = [];
-  const datasetSelector = document.getElementById("datasetSelector");
-  const checkboxes = datasetSelector.querySelectorAll('input[type="checkbox"]:checked');
+// Country
+function onChangeCountry() {
+  fetchAvailableCities()
+}
+
+function populateCountrySelector(countries) {
+    const countrySelector = document.getElementById("countrySelector");
+    countrySelector.innerHTML = "";
+    countries.sort()
+    countries.forEach((country) => {
+      const label = document.createElement("label");
+      label.innerHTML = `
+              <input type="checkbox" value="${country}" />
+              ${country}
+          `;
+        countrySelector.appendChild(label);
+    });
+  }
+
+  
+function fetchAvailableCountries() {
+    fetch("/get_available_countries")
+      .then((response) => response.json())
+      .then((countries) => {
+        populateCountrySelector(countries);
+      });
+  }
+
+function getCurrentCountry() {
+  const selectedCountries = [];
+  const countrySelector = document.getElementById("countrySelector");
+  const checkboxes = countrySelector.querySelectorAll('input[type="checkbox"]:checked');
 
   checkboxes.forEach((checkbox) => {
     const label = checkbox.parentElement;
     const name = label.textContent.trim();
     const value = checkbox.value;
-    selectedDatasets.push({ name, value });
+    selectedCountries.push({ name, value });
   });
-  if (selectedDatasets.length == 0) {
+  if (selectedCountries.length == 0) {
     return null;
   }
-  return selectedDatasets[0].value;
+  return selectedCountries[0].value;
 }
 
-function onChangeDataset() {
-  fetchAvailableRoutes();
-  updateVehiclePositions();
+// City
+function onChangeCity() {
+  fetchAvailableRoutes()
 }
 
-function populateDatasetSelector(datasets) {
-    const datasetSelector = document.getElementById("datasetSelector");
-    datasetSelector.innerHTML = "";
-    console.log( datasets[0]);
-    datasets.forEach((dataset) => {
-      // Sort datasets IDs alphabetically
+function populateCitySelector(cities) {
+    const citySelector = document.getElementById("citySelector");
+    citySelector.innerHTML = "";
+    cities.forEach((city) => {
       const label = document.createElement("label");
-      dname = dataset.name;
-      dvalue = dataset.id;
-      console.log(dname + " " + dvalue);
-      label.innerHTML = `
-              <input type="checkbox" value="${dvalue}" />
-              ${dname}
-          `;
-      datasetSelector.appendChild(label);
-    });
+      city_id = city.id
+      const city_names = city.name.split(","); // Split city_name by comma
+      city_names.sort()
+        city_names.forEach((city_name) => {
+            const label = document.createElement("label");
+            label.innerHTML = `
+                <input type="checkbox" value="${city_id}" />
+                ${city_name.trim()} <!-- Trim to remove extra spaces -->
+            `;
+            citySelector.appendChild(label);
+        });
+      });
   }
-
   
-function fetchAvailableDatasets() {
-    fetch("/get_available_datasets")
+function fetchAvailableCities() {
+  const currentCountry = getCurrentCountry()
+  const params = new URLSearchParams({
+    country: currentCountry
+  });
+  fetch(`/get_available_cities?${params}`)
       .then((response) => response.json())
-      .then((datasets) => {
-        populateDatasetSelector(datasets);
+      .then((cities) => {
+        populateCitySelector(cities);
       });
   }
 
+function getCurrentCity() {
+  const selectedCities = [];
+  const citySelector = document.getElementById("citySelector");
+  const checkboxes = citySelector.querySelectorAll('input[type="checkbox"]:checked');
+
+  checkboxes.forEach((checkbox) => {
+    const label = checkbox.parentElement;
+    const name = label.textContent.trim();
+    const value = checkbox.value;
+    selectedCities.push({ name, value });
+  });
+  if (selectedCities.length == 0) {
+    return null;
+  }
+  return selectedCities[0].value;
+}
+
+// main window
 window.onload = () => {
   initializeMap();
-  fetchAvailableDatasets();
-  fetchAvailableRoutes();
-  updateVehiclePositions();
+  fetchAvailableCountries();
   document
     .getElementById("routeSelector")
     .addEventListener("change", updateVehiclePositions);
