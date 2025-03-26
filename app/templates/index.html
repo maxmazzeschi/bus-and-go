@@ -11,23 +11,26 @@
   <div id="map">
     <div id="controls">
         <label for="Country">Select Country:</label>
-      <div class="dropdown" onchange="onChangeCountry()">
-        <button>Country ▼</button>
-        <div id="countrySelector" class="dropdown-content">
-         </div>
-     </div>
-     <div class="dropdown" onchange="onChangeCity()">
-      <button>City ▼</button>
-      <div id="citySelector" class="dropdown-content">
-       </div>
-   </div>
-    <label for="routeSelector">Select Routes:</label>
-      <div class="dropdown" onchange="updateVehiclePositions()">
-        <button>Select Routes ▼</button>
-        <div id="routeSelector" class="dropdown-content">
-          <!-- Route options with checkboxes will be populated dynamically -->
+        <div class="dropdown" onchange="onChangeCountry()">
+            <button>Country ▼</button>
+            <div id="countrySelector" class="dropdown-content">
+            </div>
+        </div>
+        <div class="dropdown" onchange="onChangeCity()">
+            <button>City ▼</button>
+            <div id="citySelector" class="dropdown-content">
+            </div>
+        </div>
+        <label for="routeSelector">Select Routes:</label>
+        <div class="dropdown" onchange="updateVehiclePositions()">
+            <button>Select Routes ▼</button>
+            <div id="routeSelector" class="dropdown-content">
+                <!-- Route options with checkboxes will be populated dynamically -->
+            </div>
         </div>
     </div>
+    <!-- GitHub link positioned at the bottom-left -->
+    <a href="https://github.com/maxmazzeschi/bus-and-go" target="_blank" id="github-link">View on GitHub</a>
   </div>
 </body>
 </html>
