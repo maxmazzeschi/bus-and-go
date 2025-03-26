@@ -3,3 +3,4 @@ requests
 gunicorn
 gtfs-realtime-bindings
 jsonpath-ng
+public-transport-datasets
