@@ -291,7 +291,7 @@ function populateCitySelector(cities) {
     cities.forEach((city) => {
       const label = document.createElement("label");
       city_id = city.id
-      const city_names = city.name.split(","); // Split city_name by comma
+      city_names = city.name.split(","); // Split city_name by comma
       city_names.sort()
         city_names.forEach((city_name) => {
             const label = document.createElement("label");
