@@ -237,7 +237,24 @@ function fetchAvailableRoutes() {
 
 // Country
 function onChangeCountry() {
+  const citySelector = document.getElementById("citySelector");
+  citySelector.innerHTML = "";
   fetchAvailableCities()
+}
+
+function countrySelected(event) {
+  if (event.target.checked == false) {
+    return;
+  }
+
+  const countrySelector = document.getElementById("countrySelector");
+  const checkboxes = countrySelector.querySelectorAll('input[type="checkbox"]:checked');
+
+  checkboxes.forEach((checkbox) => {
+    if (checkbox.checked && (checkbox != event.target)) {
+      checkbox.checked = false;
+    }
+  });
 }
 
 function populateCountrySelector(countries) {
@@ -247,7 +264,7 @@ function populateCountrySelector(countries) {
     countries.forEach((country) => {
       const label = document.createElement("label");
       label.innerHTML = `
-              <input type="checkbox" value="${country}" />
+              <input type="checkbox" value="${country}" onChange="countrySelected(event)" />
               ${country}
           `;
         countrySelector.appendChild(label);
@@ -285,6 +302,21 @@ function onChangeCity() {
   fetchAvailableRoutes()
 }
 
+function citySelected(event) {
+  if (event.target.checked == false) {
+    return;
+  }
+
+  const citySelector = document.getElementById("citySelector");
+  const checkboxes = citySelector.querySelectorAll('input[type="checkbox"]:checked');
+
+  checkboxes.forEach((checkbox) => {
+    if (checkbox.checked && (checkbox != event.target)) {
+      checkbox.checked = false;
+    }
+  });
+}
+
 function populateCitySelector(cities) {
     const citySelector = document.getElementById("citySelector");
     citySelector.innerHTML = "";
@@ -296,7 +328,7 @@ function populateCitySelector(cities) {
         city_names.forEach((city_name) => {
             const label = document.createElement("label");
             label.innerHTML = `
-                <input type="checkbox" value="${city_id}" />
+                <input type="checkbox" value="${city_id}" onChange="citySelected(event)" />
                 ${city_name.trim()} <!-- Trim to remove extra spaces -->
             `;
             citySelector.appendChild(label);
