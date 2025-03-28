@@ -175,3 +175,5 @@ node_modules/
 /datasets/*.zip
 /datasets/*.txt
 !/datasets/*.sql
+
+private/

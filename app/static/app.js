@@ -1,6 +1,7 @@
 let map;
 let vehicleMarkers = {};
 let vehicleLabels = {};
+let stopsMarkers = {};
 let updateInterval = 60; // Update every 60 seconds
 let remainingTime = updateInterval;
 let timerInterval;
@@ -83,6 +84,26 @@ function updateVehiclePositions() {
     east: bounds.getEast(),
     west: bounds.getWest(),
     routes: selectedRoutes.join(","),
+  });
+
+  fetch(`/get_stops_info?${params}`)
+  .then((response) => response.json())
+  .then((stops_data) => {
+    // Remove previous stops
+    for (const stopMarker of Object.values(stopsMarkers)) {
+      map.removeLayer(stopMarker);
+    }
+    stopsMarkers = {};
+    stops_data.forEach(stop => {
+      const { lat, lon, stop_id } = stop;
+      const stop_marker = L.circleMarker([lat, lon], {
+        radius: 8,
+        color: "#ffffff",
+        fillColor: "#ffffff",
+        fillOpacity: 0.7,
+      }).addTo(map);
+      stopsMarkers[stop_id] = stop_marker;
+    });
   });
 
   fetch(`/get_vehicles_position?${params}`)

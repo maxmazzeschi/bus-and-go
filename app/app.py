@@ -53,5 +53,21 @@ def get_available_cities():
     return jsonify(available_cities)
 
 
+@app.route("/get_stops_info")
+def get_stops_info():
+    datasetId = request.args.get("datasetId")
+    if not datasetId:
+        return jsonify([])
+    dataset = DatasetsProvider.get_dataset(datasetId)
+    if dataset is None:
+        return jsonify([])
+    north = float(request.args.get("north", 90))
+    south = float(request.args.get("south", -90))
+    east = float(request.args.get("east", 180))
+    west = float(request.args.get("west", -180))
+    info = dataset.get_stops_info(north, south, east, west)
+    return jsonify(info)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
