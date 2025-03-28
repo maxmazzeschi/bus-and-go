@@ -5,6 +5,7 @@ let stopsMarkers = {};
 let updateInterval = 60; // Update every 60 seconds
 let remainingTime = updateInterval;
 let timerInterval;
+let StopsData = [];
 
 function initializeMap() {
   map = L.map("map");
@@ -67,7 +68,19 @@ function isMapInitialized() {
 function updateVehiclePositions() {
   if (isMapInitialized() == false) {
     return;
-  } 
+  }
+ zoom = map.getZoom();
+ console.log("Zoom level: " + zoom);
+ let drawStopMarkers = true
+  if (zoom < 14) {
+    drawStopMarkers = false;
+  console.log("Zoom level is too low, remove stops markers");
+  for (const stopMarker of Object.values(stopsMarkers)) {
+    map.removeLayer(stopMarker);
+  }
+  stopsMarkers = {};
+  }
+  console.log("Updating vehicle positions");
   const bounds = map.getBounds();
   const selectedRoutes = Array.from(
     document.querySelectorAll('#routeSelector input[type="checkbox"]:checked'),
@@ -85,7 +98,7 @@ function updateVehiclePositions() {
     west: bounds.getWest(),
     routes: selectedRoutes.join(","),
   });
-
+  if (drawStopMarkers) {
   fetch(`/get_stops_info?${params}`)
   .then((response) => response.json())
   .then((stops_data) => {
@@ -94,17 +107,39 @@ function updateVehiclePositions() {
       map.removeLayer(stopMarker);
     }
     stopsMarkers = {};
-    stops_data.forEach(stop => {
-      const { lat, lon, stop_id } = stop;
-      const stop_marker = L.circleMarker([lat, lon], {
-        radius: 8,
-        color: "#ffffff",
-        fillColor: "#ffffff",
-        fillOpacity: 0.7,
-      }).addTo(map);
-      stopsMarkers[stop_id] = stop_marker;
+    // Create a flag-like marker using SVG
+    const flagHtml = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+      <polygon points="2,0 24, 6 2,12" fill="#000000" />
+      <line x1="0" y1="0" x2="0" y2="24" stroke="#000000" stroke-width="2"/>
+    </svg>
+  `; // SVG code for a triangle pointing up
+  let x = 0;
+  StopsData = stops_data
+    stops_data.forEach((stop) => {
+      const { lat, lon, stop_code, stop_name } = stop;
+
+      const flagIcon = L.divIcon({
+        className: "stop-flag-icon",
+        html: flagHtml,
+        iconSize: [24, 24],
+        iconAnchor: [2, 12], // Anchor the flag's pole to the location
+      });
+
+      // Add the flag marker to the map
+      const stopMarker = L.marker([lat, lon], { icon: flagIcon }).addTo(map);
+
+      // Add hover event to the stopMarker
+      stopMarker.on("mouseover", () => {
+        onStopHover(stop_code); // Call the function with stop_code as a parameter
+      });
+      stopMarker.on("mouseout", () => {
+        onStopMouseOut(); // Call the function when the mouse leaves the marker
+      });
+      stopsMarkers[stop_code] = stopMarker;
     });
   });
+}
 
   fetch(`/get_vehicles_position?${params}`)
     .then((response) => response.json())
@@ -385,6 +420,29 @@ function getCurrentCity() {
   }
   return selectedCities[0].value;
 }
+
+// Stops
+
+function onStopHover(stop_code_) {
+   // Close any existing popup
+   map.closePopup();
+
+  StopsData.forEach((stop) => {
+    const { lat, lon, stop_code, stop_name } = stop;
+    if (stop_code_ == stop_code) {
+      const popup = L.popup()
+        .setLatLng([lat, lon])
+        .setContent(`Stop: ${stop_name}`)
+        .openOn(map);
+    }
+  });
+}
+
+function onStopMouseOut() {
+  // Close any existing popup
+  map.closePopup();
+}
+
 
 // main window
 window.onload = () => {

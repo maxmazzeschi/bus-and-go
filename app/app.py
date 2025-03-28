@@ -65,9 +65,12 @@ def get_stops_info():
     south = float(request.args.get("south", -90))
     east = float(request.args.get("east", 180))
     west = float(request.args.get("west", -180))
+
     info = dataset.get_stops_info(north, south, east, west)
+
     return jsonify(info)
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+        app.run(debug=False)
+
