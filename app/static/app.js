@@ -1,12 +1,13 @@
 let map;
 let vehicleMarkers = {};
 let vehicleLabels = {};
-let stopsMarkers = {};
+let stopsMarkers = []; // Changed to a list
 let updateInterval = 60; // Update every 60 seconds
 let remainingTime = updateInterval;
 let timerInterval;
 let StopsData = [];
 
+// Initialize the map
 function initializeMap() {
   map = L.map("map");
 
@@ -18,7 +19,7 @@ function initializeMap() {
       },
       () => {
         map.setView([41.9028, 12.4964], 12);
-      },
+      }
     );
   } else {
     map.setView([41.9028, 12.4964], 12);
@@ -39,11 +40,12 @@ function initializeMap() {
   };
   timerDiv.addTo(map);
 
-  // Update every 60 sec
+  // Update every 60 seconds
   setInterval(updateVehiclePositions, updateInterval * 1000);
   startTimer();
 }
 
+// Start the update timer
 function startTimer() {
   remainingTime = updateInterval;
   clearInterval(timerInterval);
@@ -60,163 +62,123 @@ function startTimer() {
   }, 1000);
 }
 
+// Check if the map is initialized
 function isMapInitialized() {
   return map && map._loaded && map.getCenter() && map.getZoom() !== undefined;
 }
 
-
+// Update vehicle positions
 function updateVehiclePositions() {
-  if (isMapInitialized() == false) {
-    return;
+  if (!isMapInitialized()) return;
+
+  const zoom = map.getZoom();
+  console.log("Zoom level: " + zoom);
+
+  let drawStopMarkers = zoom >= 14;
+
+  if (!drawStopMarkers) {
+    console.log("Zoom level is too low, removing stop markers");
+    stopsMarkers.forEach((stopMarker) => map.removeLayer(stopMarker));
+    stopsMarkers = [];
   }
- zoom = map.getZoom();
- console.log("Zoom level: " + zoom);
- let drawStopMarkers = true
-  if (zoom < 14) {
-    drawStopMarkers = false;
-  console.log("Zoom level is too low, remove stops markers");
-  for (const stopMarker of Object.values(stopsMarkers)) {
-    map.removeLayer(stopMarker);
-  }
-  stopsMarkers = {};
-  }
+
   console.log("Updating vehicle positions");
   const bounds = map.getBounds();
   const selectedRoutes = Array.from(
-    document.querySelectorAll('#routeSelector input[type="checkbox"]:checked'),
+    document.querySelectorAll('#routeSelector input[type="checkbox"]:checked')
   ).map((checkbox) => checkbox.value);
 
-  datasetId = getCurrentCity();
-  if (datasetId == null) {  
-    return;
-  }
+  const datasetId = getCurrentCity();
+  if (!datasetId) return;
+
   const params = new URLSearchParams({
-    datasetId: datasetId,
+    datasetId,
     north: bounds.getNorth(),
     south: bounds.getSouth(),
     east: bounds.getEast(),
     west: bounds.getWest(),
     routes: selectedRoutes.join(","),
   });
+
   if (drawStopMarkers) {
-  fetch(`/get_stops_info?${params}`)
-  .then((response) => response.json())
-  .then((stops_data) => {
-    // Remove previous stops
-    for (const stopMarker of Object.values(stopsMarkers)) {
-      map.removeLayer(stopMarker);
-    }
-    stopsMarkers = {};
-    // Create a flag-like marker using SVG
-    const flagHtml = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-      <polygon points="2,0 24, 6 2,12" fill="#000000" />
-      <line x1="0" y1="0" x2="0" y2="24" stroke="#000000" stroke-width="2"/>
-    </svg>
-  `; // SVG code for a triangle pointing up
-  let x = 0;
-  StopsData = stops_data
-    stops_data.forEach((stop) => {
-      const { lat, lon, stop_code, stop_name } = stop;
+    fetch(`/get_stops_info?${params}`)
+      .then((response) => response.json())
+      .then((stops_data) => {
+        // Remove previous stops
+        stopsMarkers.forEach((stopMarker) => map.removeLayer(stopMarker));
+        stopsMarkers = [];
 
-      const flagIcon = L.divIcon({
-        className: "stop-flag-icon",
-        html: flagHtml,
-        iconSize: [24, 24],
-        iconAnchor: [2, 12], // Anchor the flag's pole to the location
-      });
+        // Create a flag-like marker using SVG
+        const flagHtml = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+            <polygon points="2,0 24,6 2,12" fill="#000000" />
+            <line x1="0" y1="0" x2="0" y2="24" stroke="#000000" stroke-width="2"/>
+          </svg>
+        `;
 
-      // Add the flag marker to the map
-      const stopMarker = L.marker([lat, lon], { icon: flagIcon }).addTo(map);
+        StopsData = stops_data;
+        stops_data.forEach((stop) => {
+          const { stop_id, lat, lon, stop_name } = stop;
 
-      // Add hover event to the stopMarker
-      stopMarker.on("mouseover", () => {
-        onStopHover(stop_code); // Call the function with stop_code as a parameter
+          const flagIcon = L.divIcon({
+            className: "stop-flag-icon",
+            html: flagHtml,
+            iconSize: [24, 24],
+            iconAnchor: [2, 12], // Anchor the flag's pole to the location
+          });
+
+          // Add the flag marker to the map
+          const stopMarker = L.marker([lat, lon], { icon: flagIcon }).addTo(map);
+
+          // Add hover events to the stopMarker
+          stopMarker.on("mouseover", () => onStopHover(stop_id));
+          stopMarker.on("mouseout", onStopMouseOut);
+
+          stopsMarkers.push(stopMarker);
+        });
       });
-      stopMarker.on("mouseout", () => {
-        onStopMouseOut(); // Call the function when the mouse leaves the marker
-      });
-      stopsMarkers[stop_code] = stopMarker;
-    });
-  });
-}
+  }
 
   fetch(`/get_vehicles_position?${params}`)
     .then((response) => response.json())
     .then((data) => {
       // Remove previous markers
-      for (const marker of Object.values(vehicleMarkers)) {
-        map.removeLayer(marker);
-      }
-      for (const label of Object.values(vehicleLabels)) {
-        map.removeLayer(label);
-      }
-      if (data.length == 0) {
-        return;
-      }
-      
-      const created_date_ms = new Date(data.created_date * 1000); // Multiply by 1000 to convert seconds to milliseconds
+      Object.values(vehicleMarkers).forEach((marker) => map.removeLayer(marker));
+      Object.values(vehicleLabels).forEach((label) => map.removeLayer(label));
 
-      // Format the date to a human-readable string
-      const created_date = created_date_ms.toLocaleString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
+      if (data.length === 0) return;
 
-      const updated_date_ms = new Date(data.last_update * 1000); // Multiply by 1000 to convert seconds to milliseconds
-
-      // Format the date to a human-readable string
-      const updated_date = updated_date_ms.toLocaleString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-      console.log("created on " + created_date + " updated on " + updated_date);
       vehicleMarkers = {};
       vehicleLabels = {};
-      vehicles = data.vehicles;
-      vehicles.forEach((vehicle) => {
-        const { lat, lon, route_id, bearing, speed, vehicle_id } = vehicle;
-        //console.log(vehicle);
-        // Create a circle marker for the vehicle's position
 
-        // Add route label
-        rounded_speed = Math.round(speed);
+      data.vehicles.forEach((vehicle) => {
+        const { lat, lon, route_id, bearing, speed, vehicle_id } = vehicle;
+
+        const roundedSpeed = Math.round(speed);
         const label = L.divIcon({
           className: "vehicle-label",
-          html: route_id + (rounded_speed > 0 ? "@" + rounded_speed + " Km/h" : ""),
-          iconSize: rounded_speed > 0 ? [90, 15] : [30, 15],
+          html: `${route_id}${roundedSpeed > 0 ? `@${roundedSpeed} Km/h` : ""}`,
+          iconSize: roundedSpeed > 0 ? [90, 15] : [30, 15],
           iconAnchor: [-10, 10],
         });
 
         const labelMarker = L.marker([lat, lon], { icon: label }).addTo(map);
 
-        if (true && bearing > 0) {
-          // Improved arrow using SVG
+        if (bearing > 0) {
           const arrowHtml = `
-  <svg class="arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" style="transform: rotate(${Math.round(bearing)}deg);">
-    <polygon points="12,2 22,22 12,17 2,22" />
-  </svg>
-`; // SVG code for a triangle pointing up
+            <svg class="arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" style="transform: rotate(${Math.round(bearing)}deg);">
+              <polygon points="12,2 22,22 12,17 2,22" />
+            </svg>
+          `;
 
           const arrow = L.divIcon({
             className: "arrow-icon",
             html: arrowHtml,
             iconSize: [24, 24],
-            iconAnchor: [12, 12], // Anchor point at the center of the arrow
+            iconAnchor: [12, 12],
           });
 
-          // Create an arrow marker at the correct lat, lon
           const arrowMarker = L.marker([lat, lon], { icon: arrow }).addTo(map);
-
-          // Store the arrow marker
           vehicleMarkers[vehicle_id] = arrowMarker;
         } else {
           const marker = L.circleMarker([lat, lon], {
@@ -228,114 +190,132 @@ function updateVehiclePositions() {
           vehicleMarkers[vehicle_id] = marker;
         }
 
-        // Store the marker and label references
-
         vehicleLabels[vehicle_id] = labelMarker;
       });
-      // Reset timer on update
+
       startTimer();
     });
 }
 
-function compareRouteId(a, b) {
-  va = parseInt(a);
-  vb = parseInt(b);
-  if (va != NaN && vb != NaN) {
-    if (va == vb) {
-      return 0;
+// Hover events for stops
+function onStopHover(stop_id_) {
+  map.closePopup();
+
+  StopsData.forEach((stop) => {
+    const { lat, lon, stop_id, stop_name } = stop;
+    if (stop_id_ === stop_id) {
+      const popup = L.popup()
+        .setLatLng([lat, lon])
+        .setContent(`Stop: ${stop_name}`)
+        .openOn(map);
     }
-    return a < b ? -1 : 1;
+  });
+}
+
+function onStopMouseOut() {
+  map.closePopup();
+}
+
+// Main window load
+window.onload = () => {
+  initializeMap();
+  fetchAvailableCountries();
+  document
+    .getElementById("routeSelector")
+    .addEventListener("change", updateVehiclePositions);
+};
+
+// Compare route IDs
+function compareRouteId(a, b) {
+  const va = parseInt(a);
+  const vb = parseInt(b);
+  if (!isNaN(va) && !isNaN(vb)) {
+    if (va === vb) return 0;
+    return va < vb ? -1 : 1;
   }
-  if (va == NaN) {
-    return 1;
-  }
-  if (vb == NaN) {
-    return -1;
-  }
+  if (isNaN(va)) return 1;
+  if (isNaN(vb)) return -1;
   return 0;
 }
 
+// Populate route selector
 function populateRouteSelector(routeIds) {
   const routeSelector = document.getElementById("routeSelector");
   routeSelector.innerHTML = "";
   routeIds.sort(compareRouteId).forEach((routeId) => {
-    // Sort route IDs alphabetically
     const label = document.createElement("label");
     label.innerHTML = `
-            <input type="checkbox" value="${routeId}" />
-            ${routeId}
-        `;
+      <input type="checkbox" value="${routeId}" />
+      ${routeId}
+    `;
     routeSelector.appendChild(label);
   });
 }
 
-
-// Routes
+// Fetch available routes
 function fetchAvailableRoutes() {
-  datasetId = getCurrentCity();
-  if (datasetId == null) {
-    return;
-  }
-  const params = new URLSearchParams({
-    datasetId: datasetId
-  });
+  const datasetId = getCurrentCity();
+  if (!datasetId) return;
+
+  const params = new URLSearchParams({ datasetId });
 
   console.log("Fetching routes for dataset: " + datasetId);
   fetch(`/get_routes_info?${params}`)
     .then((response) => response.json())
     .then((route_info) => {
       populateRouteSelector(route_info.route_ids);
-      lat = (route_info.min_latitude + route_info.max_latitude)/2
-      lon = (route_info.min_longitude + route_info.max_longitude)/2
+      const lat = (route_info.min_latitude + route_info.max_latitude) / 2;
+      const lon = (route_info.min_longitude + route_info.max_longitude) / 2;
       map.setView([lat, lon], 12);
     });
 }
 
-// Country
+// Country change event
 function onChangeCountry() {
   const citySelector = document.getElementById("citySelector");
   citySelector.innerHTML = "";
-  fetchAvailableCities()
+  fetchAvailableCities();
 }
 
+// Country selected event
 function countrySelected(event) {
-  if (event.target.checked == false) {
-    return;
-  }
+  if (!event.target.checked) return;
 
   const countrySelector = document.getElementById("countrySelector");
   const checkboxes = countrySelector.querySelectorAll('input[type="checkbox"]:checked');
 
   checkboxes.forEach((checkbox) => {
-    if (checkbox.checked && (checkbox != event.target)) {
+    if (checkbox.checked && checkbox !== event.target) {
       checkbox.checked = false;
     }
   });
 }
 
+// Populate country selector
 function populateCountrySelector(countries) {
-    const countrySelector = document.getElementById("countrySelector");
-    countrySelector.innerHTML = "";
-    countries.sort()
-    countries.forEach((country) => {
-      const label = document.createElement("label");
-      label.innerHTML = `
-              <input type="checkbox" value="${country}" onChange="countrySelected(event)" />
-              ${country}
-          `;
-        countrySelector.appendChild(label);
-    });
-  }
+  const countrySelector = document.getElementById("countrySelector");
+  countrySelector.innerHTML = "";
+  countries.sort();
+  countries.forEach((country) => {
+    const label = document.createElement("label");
+    label.innerHTML = `
+      <input type="checkbox" value="${country}" onChange="countrySelected(event)" />
+      ${country}
+    `;
+    countrySelector.appendChild(label);
+  });
+}
 
-  
+// Fetch available countries
 function fetchAvailableCountries() {
-    fetch("/get_available_countries")
-      .then((response) => response.json())
-      .then((countries) => {
-        populateCountrySelector(countries);
-      });
-  }
+  fetch("/get_available_countries")
+    .then((response) => response.json())
+    .then((countries) => {
+      populateCountrySelector(countries);
+    });
+}
 
+// Get current country
 function getCurrentCountry() {
   const selectedCountries = [];
   const countrySelector = document.getElementById("countrySelector");
@@ -347,63 +327,60 @@ function getCurrentCountry() {
     const value = checkbox.value;
     selectedCountries.push({ name, value });
   });
-  if (selectedCountries.length == 0) {
-    return null;
-  }
+  if (selectedCountries.length === 0) return null;
   return selectedCountries[0].value;
 }
 
-// City
+// City change event
 function onChangeCity() {
-  fetchAvailableRoutes()
+  fetchAvailableRoutes();
 }
 
+// City selected event
 function citySelected(event) {
-  if (event.target.checked == false) {
-    return;
-  }
+  if (!event.target.checked) return;
 
   const citySelector = document.getElementById("citySelector");
   const checkboxes = citySelector.querySelectorAll('input[type="checkbox"]:checked');
 
   checkboxes.forEach((checkbox) => {
-    if (checkbox.checked && (checkbox != event.target)) {
+    if (checkbox.checked && checkbox !== event.target) {
       checkbox.checked = false;
     }
   });
 }
 
+// Populate city selector
 function populateCitySelector(cities) {
-    const citySelector = document.getElementById("citySelector");
-    citySelector.innerHTML = "";
-    cities.forEach((city) => {
+  const citySelector = document.getElementById("citySelector");
+  citySelector.innerHTML = "";
+  cities.forEach((city) => {
+    const city_id = city.id;
+    const city_names = city.name.split(","); // Split city_name by comma
+    city_names.sort();
+    city_names.forEach((city_name) => {
       const label = document.createElement("label");
-      city_id = city.id
-      city_names = city.name.split(","); // Split city_name by comma
-      city_names.sort()
-        city_names.forEach((city_name) => {
-            const label = document.createElement("label");
-            label.innerHTML = `
-                <input type="checkbox" value="${city_id}" onChange="citySelected(event)" />
-                ${city_name.trim()} <!-- Trim to remove extra spaces -->
-            `;
-            citySelector.appendChild(label);
-        });
-      });
-  }
-  
-function fetchAvailableCities() {
-  const currentCountry = getCurrentCountry()
-  const params = new URLSearchParams({
-    country: currentCountry
+      label.innerHTML = `
+        <input type="checkbox" value="${city_id}" onChange="citySelected(event)" />
+        ${city_name.trim()} <!-- Trim to remove extra spaces -->
+      `;
+      citySelector.appendChild(label);
+    });
   });
-  fetch(`/get_available_cities?${params}`)
-      .then((response) => response.json())
-      .then((cities) => {
-        populateCitySelector(cities);
-      });
-  }
+}
 
+// Fetch available cities
+function fetchAvailableCities() {
+  const currentCountry = getCurrentCountry();
+  const params = new URLSearchParams({ country: currentCountry });
+  fetch(`/get_available_cities?${params}`)
+    .then((response) => response.json())
+    .then((cities) => {
+      populateCitySelector(cities);
+    });
+}
+
+// Get current city
 function getCurrentCity() {
   const selectedCities = [];
   const citySelector = document.getElementById("citySelector");
@@ -415,40 +392,6 @@ function getCurrentCity() {
     const value = checkbox.value;
     selectedCities.push({ name, value });
   });
-  if (selectedCities.length == 0) {
-    return null;
-  }
+  if (selectedCities.length === 0) return null;
   return selectedCities[0].value;
 }
-
-// Stops
-
-function onStopHover(stop_code_) {
-   // Close any existing popup
-   map.closePopup();
-
-  StopsData.forEach((stop) => {
-    const { lat, lon, stop_code, stop_name } = stop;
-    if (stop_code_ == stop_code) {
-      const popup = L.popup()
-        .setLatLng([lat, lon])
-        .setContent(`Stop: ${stop_name}`)
-        .openOn(map);
-    }
-  });
-}
-
-function onStopMouseOut() {
-  // Close any existing popup
-  map.closePopup();
-}
-
-
-// main window
-window.onload = () => {
-  initializeMap();
-  fetchAvailableCountries();
-  document
-    .getElementById("routeSelector")
-    .addEventListener("change", updateVehiclePositions);
-};
