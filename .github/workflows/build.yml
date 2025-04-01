@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - main
+      - master  # Triggers the workflow on push to the master branch
   workflow_dispatch:  # Enables manual triggering of the workflow
 
 jobs:
