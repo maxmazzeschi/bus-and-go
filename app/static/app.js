@@ -352,7 +352,7 @@ function citySelected(event) {
 
 function populateCitySelector(cities) {
   const citySelector = document.getElementById("citySelector");
-  var city_catalogue = []; // Initialize the catalogue
+  let city_catalogue = []; // Initialize the catalogue
   citySelector.innerHTML = "";
 
   cities.forEach((city) => {
