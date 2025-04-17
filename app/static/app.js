@@ -350,22 +350,39 @@ function citySelected(event) {
   });
 }
 
-// Populate city selector
 function populateCitySelector(cities) {
   const citySelector = document.getElementById("citySelector");
+  city_catalogue = []; // Initialize the catalogue
   citySelector.innerHTML = "";
+
   cities.forEach((city) => {
     const city_id = city.id;
     const city_names = city.name.split(","); // Split city_name by comma
     city_names.sort();
+
     city_names.forEach((city_name) => {
-      const label = document.createElement("label");
-      label.innerHTML = `
-        <input type="checkbox" value="${city_id}" onChange="citySelected(event)" />
-        ${city_name.trim()} <!-- Trim to remove extra spaces -->
-      `;
-      citySelector.appendChild(label);
+      const trimmedName = city_name.trim();
+
+      // Check if the city already exists in the catalogue
+      const exists = city_catalogue.some(
+        (entry) => entry.id === city_id && entry.name === trimmedName
+      );
+
+      if (!exists) {
+        city_catalogue.push({ id: city_id, name: trimmedName }); // Store in the catalogue
+      }
     });
+  });
+
+  // Sort and populate the city selector
+  city_catalogue.sort((a, b) => a.name.localeCompare(b.name)); // Sort the catalogue
+  city_catalogue.forEach((city) => {
+    const label = document.createElement("label");
+    label.innerHTML = `
+      <input type="checkbox" value="${city.id}" onChange="citySelected(event)" />
+      ${city.name}
+    `;
+    citySelector.appendChild(label);
   });
 }
 
