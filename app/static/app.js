@@ -118,7 +118,7 @@ function updateVehiclePositions() {
 
         StopsData = stops_data;
         stops_data.forEach((stop) => {
-          const { stop_id, lat, lon, stop_name } = stop;
+          const { stop_id, lat, lon } = stop;
 
           const flagIcon = L.divIcon({
             className: "stop-flag-icon",
@@ -352,7 +352,7 @@ function citySelected(event) {
 
 function populateCitySelector(cities) {
   const citySelector = document.getElementById("citySelector");
-  city_catalogue = []; // Initialize the catalogue
+  var city_catalogue = []; // Initialize the catalogue
   citySelector.innerHTML = "";
 
   cities.forEach((city) => {
