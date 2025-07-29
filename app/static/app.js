@@ -7,6 +7,13 @@ let remainingTime = updateInterval;
 let timerInterval;
 let StopsData = [];
 
+// Storage keys
+const STORAGE_KEYS = {
+  COUNTRY: 'selected_country',
+  CITY: 'selected_city',
+  ROUTES: 'selected_routes'
+};
+
 // Initialize the map
 function initializeMap() {
   map = L.map("map");
@@ -216,6 +223,247 @@ function onStopMouseOut() {
   map.closePopup();
 }
 
+// Save selection to localStorage
+function saveSelection(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn('Failed to save selection to localStorage:', error);
+  }
+}
+
+// Load selection from localStorage
+function loadSelection(key) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : null;
+  } catch (error) {
+    console.warn('Failed to load selection from localStorage:', error);
+    return null;
+  }
+}
+
+// Restore saved selections
+function restoreSelections() {
+  // Restore country selection
+  const savedCountry = loadSelection(STORAGE_KEYS.COUNTRY);
+  if (savedCountry) {
+    setTimeout(() => {
+      const countryCheckbox = document.querySelector(`#countrySelector input[value="${savedCountry}"]`);
+      if (countryCheckbox) {
+        countryCheckbox.checked = true;
+        fetchAvailableCities();
+      }
+    }, 100);
+  }
+
+  // Restore city selection after countries are loaded
+  const savedCity = loadSelection(STORAGE_KEYS.CITY);
+  if (savedCity) {
+    setTimeout(() => {
+      const cityCheckbox = document.querySelector(`#citySelector input[value="${savedCity}"]`);
+      if (cityCheckbox) {
+        cityCheckbox.checked = true;
+        fetchAvailableRoutes();
+      }
+    }, 500);
+  }
+
+  // Restore route selections after routes are loaded
+  const savedRoutes = loadSelection(STORAGE_KEYS.ROUTES);
+  if (savedRoutes && Array.isArray(savedRoutes)) {
+    setTimeout(() => {
+      savedRoutes.forEach(routeId => {
+        const routeCheckbox = document.querySelector(`#routeSelector input[value="${routeId}"]`);
+        if (routeCheckbox) {
+          routeCheckbox.checked = true;
+        }
+      });
+      updateVehiclePositions();
+    }, 1000);
+  }
+}
+
+// Updated country selected event
+function countrySelected(event) {
+  if (!event.target.checked) return;
+
+  const countrySelector = document.getElementById("countrySelector");
+  const checkboxes = countrySelector.querySelectorAll('input[type="checkbox"]:checked');
+
+  checkboxes.forEach((checkbox) => {
+    if (checkbox.checked && checkbox !== event.target) {
+      checkbox.checked = false;
+    }
+  });
+
+  // Save country selection
+  saveSelection(STORAGE_KEYS.COUNTRY, event.target.value);
+  
+  // Clear city and route selections when country changes
+  saveSelection(STORAGE_KEYS.CITY, null);
+  saveSelection(STORAGE_KEYS.ROUTES, []);
+}
+
+// Updated city selected event
+function citySelected(event) {
+  if (!event.target.checked) return;
+
+  const citySelector = document.getElementById("citySelector");
+  const checkboxes = citySelector.querySelectorAll('input[type="checkbox"]:checked');
+
+  checkboxes.forEach((checkbox) => {
+    if (checkbox.checked && checkbox !== event.target) {
+      checkbox.checked = false;
+    }
+  });
+
+  // Save city selection
+  saveSelection(STORAGE_KEYS.CITY, event.target.value);
+  
+  // Clear route selections when city changes
+  saveSelection(STORAGE_KEYS.ROUTES, []);
+}
+
+// Updated route selector population with event listeners
+function populateRouteSelector(routeIds) {
+  const routeSelector = document.getElementById("routeSelector");
+  routeSelector.innerHTML = "";
+  routeIds.sort(compareRouteId).forEach((routeId) => {
+    const label = document.createElement("label");
+    label.innerHTML = `
+      <input type="checkbox" value="${routeId}" />
+      ${routeId}
+    `;
+    
+    // Add event listener to save route selection
+    const checkbox = label.querySelector('input');
+    checkbox.addEventListener('change', saveRouteSelections);
+    
+    routeSelector.appendChild(label);
+  });
+}
+
+// Save route selections
+function saveRouteSelections() {
+  const selectedRoutes = Array.from(
+    document.querySelectorAll('#routeSelector input[type="checkbox"]:checked')
+  ).map((checkbox) => checkbox.value);
+  
+  saveSelection(STORAGE_KEYS.ROUTES, selectedRoutes);
+}
+
+// Open vehicle statistics popup
+function openVehicleStatsPopup() {
+  const datasetId = getCurrentCity();
+  if (!datasetId) {
+    alert('Please select a city first');
+    return;
+  }
+
+  // Get all vehicles without route filtering
+  const params = new URLSearchParams({
+    datasetId,
+    north: 90,
+    south: -90,
+    east: 180,
+    west: -180,
+    routes: '', // Empty to get all routes
+  });
+
+  fetch(`/get_vehicles_position?${params}`)
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.vehicles || data.vehicles.length === 0) {
+        alert('No vehicle data available');
+        return;
+      }
+
+      // Count vehicles by route_id
+      const routeCounts = {};
+      data.vehicles.forEach((vehicle) => {
+        const routeId = vehicle.route_id;
+        routeCounts[routeId] = (routeCounts[routeId] || 0) + 1;
+      });
+
+      // Sort route IDs
+      const sortedRoutes = Object.keys(routeCounts).sort(compareRouteId);
+
+      // Create popup content
+      const popupContent = createVehicleStatsGrid(sortedRoutes, routeCounts);
+      
+      // Show popup
+      showVehicleStatsPopup(popupContent);
+    })
+    .catch((error) => {
+      console.error('Error fetching vehicle data:', error);
+      alert('Error fetching vehicle data');
+    });
+}
+
+// Create the grid content for vehicle statistics
+function createVehicleStatsGrid(sortedRoutes, routeCounts) {
+  let gridHTML = `
+    <div class="vehicle-stats-container">
+      <h3>Vehicle Count by Route</h3>
+      <div class="vehicle-stats-grid">
+        <div class="grid-header">
+          <div class="grid-cell"><strong>Route ID</strong></div>
+          <div class="grid-cell"><strong>Vehicle Count</strong></div>
+        </div>
+  `;
+
+  sortedRoutes.forEach((routeId) => {
+    gridHTML += `
+      <div class="grid-row">
+        <div class="grid-cell">${routeId}</div>
+        <div class="grid-cell">${routeCounts[routeId]}</div>
+      </div>
+    `;
+  });
+
+  gridHTML += `
+      </div>
+      <div class="stats-summary">
+        <p><strong>Total Routes:</strong> ${sortedRoutes.length}</p>
+        <p><strong>Total Vehicles:</strong> ${Object.values(routeCounts).reduce((sum, count) => sum + count, 0)}</p>
+      </div>
+      <button onclick="closeVehicleStatsPopup()" class="close-btn">Close</button>
+    </div>
+  `;
+
+  return gridHTML;
+}
+
+// Show the vehicle statistics popup
+function showVehicleStatsPopup(content) {
+  // Remove existing popup if any
+  closeVehicleStatsPopup();
+
+  // Create popup overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'vehicleStatsOverlay';
+  overlay.className = 'popup-overlay';
+  overlay.innerHTML = content;
+
+  // Close popup when clicking overlay
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      closeVehicleStatsPopup();
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
+// Close the vehicle statistics popup
+function closeVehicleStatsPopup() {
+  const overlay = document.getElementById('vehicleStatsOverlay');
+  if (overlay) {
+    overlay.remove();
+  }
+}
+
 // Main window load
 window.onload = () => {
   initializeMap();
@@ -223,6 +471,9 @@ window.onload = () => {
   document
     .getElementById("routeSelector")
     .addEventListener("change", updateVehiclePositions);
+  
+  // Restore saved selections after a short delay to ensure DOM is ready
+  setTimeout(restoreSelections, 200);
 };
 
 // Compare route IDs
@@ -267,6 +518,20 @@ function fetchAvailableRoutes() {
       const lat = (route_info.min_latitude + route_info.max_latitude) / 2;
       const lon = (route_info.min_longitude + route_info.max_longitude) / 2;
       map.setView([lat, lon], 12);
+      
+      // Restore route selections after population
+      const savedRoutes = loadSelection(STORAGE_KEYS.ROUTES);
+      if (savedRoutes && Array.isArray(savedRoutes)) {
+        setTimeout(() => {
+          savedRoutes.forEach(routeId => {
+            const routeCheckbox = document.querySelector(`#routeSelector input[value="${routeId}"]`);
+            if (routeCheckbox) {
+              routeCheckbox.checked = true;
+            }
+          });
+          updateVehiclePositions();
+        }, 50);
+      }
     });
 }
 
@@ -275,20 +540,6 @@ function onChangeCountry() {
   const citySelector = document.getElementById("citySelector");
   citySelector.innerHTML = "";
   fetchAvailableCities();
-}
-
-// Country selected event
-function countrySelected(event) {
-  if (!event.target.checked) return;
-
-  const countrySelector = document.getElementById("countrySelector");
-  const checkboxes = countrySelector.querySelectorAll('input[type="checkbox"]:checked');
-
-  checkboxes.forEach((checkbox) => {
-    if (checkbox.checked && checkbox !== event.target) {
-      checkbox.checked = false;
-    }
-  });
 }
 
 // Populate country selector
@@ -312,6 +563,17 @@ function fetchAvailableCountries() {
     .then((response) => response.json())
     .then((countries) => {
       populateCountrySelector(countries);
+      // Restore country selection after population
+      const savedCountry = loadSelection(STORAGE_KEYS.COUNTRY);
+      if (savedCountry) {
+        setTimeout(() => {
+          const countryCheckbox = document.querySelector(`#countrySelector input[value="${savedCountry}"]`);
+          if (countryCheckbox) {
+            countryCheckbox.checked = true;
+            fetchAvailableCities();
+          }
+        }, 50);
+      }
     });
 }
 
@@ -394,6 +656,17 @@ function fetchAvailableCities() {
     .then((response) => response.json())
     .then((cities) => {
       populateCitySelector(cities);
+      // Restore city selection after population
+      const savedCity = loadSelection(STORAGE_KEYS.CITY);
+      if (savedCity) {
+        setTimeout(() => {
+          const cityCheckbox = document.querySelector(`#citySelector input[value="${savedCity}"]`);
+          if (cityCheckbox) {
+            cityCheckbox.checked = true;
+            fetchAvailableRoutes();
+          }
+        }, 50);
+      }
     });
 }
 

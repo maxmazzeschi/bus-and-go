@@ -7,6 +7,8 @@ Sources https://github.com/maxmazzeschi/public-transport-datasets
 ## How it works
 bus and go will show you a map of your location (or defaults to Rome), then you have to select the Country and City.
 
+Working example at: https://bus-and-go.onrender.com/
+
 Map will populate with bus vehicles in the area. 
 
 Depending on the service provider you might have additional information as bearing (vehicle will appear as arrow in the driving direction) and current speed (as label).

@@ -101,3 +101,112 @@
   background-color: rgba(255, 255, 255, 1);
   color: #0056b3;
 }
+
+/* Vehicle Statistics Button */
+#vehicleStatsBtn {
+  margin-left: 10px;
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#vehicleStatsBtn:hover {
+  background-color: #0056b3;
+}
+
+/* Popup Overlay */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+/* Vehicle Statistics Container */
+.vehicle-stats-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.vehicle-stats-container h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #333;
+}
+
+/* Grid Styles */
+.vehicle-stats-grid {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.grid-header {
+  display: flex;
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.grid-row {
+  display: flex;
+  border-top: 1px solid #ddd;
+}
+
+.grid-row:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.grid-cell {
+  flex: 1;
+  padding: 8px 12px;
+  text-align: center;
+  border-right: 1px solid #ddd;
+}
+
+.grid-cell:last-child {
+  border-right: none;
+}
+
+/* Stats Summary */
+.stats-summary {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+}
+
+.stats-summary p {
+  margin: 5px 0;
+}
+
+/* Close Button */
+.close-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.close-btn:hover {
+  background-color: #545b62;
+}
