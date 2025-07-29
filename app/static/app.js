@@ -437,36 +437,108 @@ function createVehicleStatsGrid(sortedRoutes, routeCounts) {
 
 // Show the vehicle statistics popup
 function showVehicleStatsPopup(content) {
-  // Remove existing popup if any
   closeVehicleStatsPopup();
-
-  // Create popup overlay
+  
   const overlay = document.createElement('div');
   overlay.id = 'vehicleStatsOverlay';
   overlay.className = 'popup-overlay';
   overlay.innerHTML = content;
-
-  // Close popup when clicking overlay
+  
+  // Prevent map interaction when touching popup content
+  overlay.addEventListener('touchstart', function(e) {
+    e.stopPropagation();
+  });
+  
+  overlay.addEventListener('touchmove', function(e) {
+    e.stopPropagation();
+  });
+  
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
       closeVehicleStatsPopup();
     }
   });
-
+  
+  document.body.classList.add('popup-open');
   document.body.appendChild(overlay);
+  
+  // Disable map interaction when popup is open
+  if (map) {
+    map.dragging.disable();
+    map.scrollWheelZoom.disable();
+    map.touchZoom.disable();
+  }
 }
 
-// Close the vehicle statistics popup
 function closeVehicleStatsPopup() {
   const overlay = document.getElementById('vehicleStatsOverlay');
   if (overlay) {
     overlay.remove();
+  }
+  document.body.classList.remove('popup-open');
+  
+  // Re-enable map interaction when popup closes
+  if (map) {
+    map.dragging.enable();
+    map.scrollWheelZoom.enable();
+    map.touchZoom.enable();
+  }
+}
+
+// Toggle controls visibility
+function toggleControls() {
+  const controls = document.getElementById('controls');
+  const icon = document.getElementById('controls-icon');
+  
+  if (controls.classList.contains('collapsed')) {
+    controls.classList.remove('collapsed');
+    controls.classList.add('expanded');
+    icon.textContent = '▼';
+    
+    // Save state
+    localStorage.setItem('controlsExpanded', 'true');
+  } else {
+    controls.classList.add('collapsed');
+    controls.classList.remove('expanded');
+    icon.textContent = '▲';
+    
+    // Close any open dropdowns when collapsing
+    const dropdowns = document.querySelectorAll('.dropdown-content');
+    dropdowns.forEach(dropdown => {
+      dropdown.style.display = 'none';
+    });
+    
+    // Re-enable map interaction
+    if (map) {
+      map.dragging.enable();
+      map.scrollWheelZoom.enable();
+      map.touchZoom.enable();
+    }
+    
+    // Save state
+    localStorage.setItem('controlsExpanded', 'false');
+  }
+}
+
+// Initialize controls state
+function initializeControlsState() {
+  const controls = document.getElementById('controls');
+  const icon = document.getElementById('controls-icon');
+  const savedState = localStorage.getItem('controlsExpanded');
+  
+  if (savedState === 'false') {
+    controls.classList.add('collapsed');
+    icon.textContent = '▲';
+  } else {
+    controls.classList.add('expanded');
+    icon.textContent = '▼';
   }
 }
 
 // Main window load
 window.onload = () => {
   initializeMap();
+  initializeControlsState(); // Add this line
   fetchAvailableCountries();
   document
     .getElementById("routeSelector")
@@ -685,3 +757,83 @@ function getCurrentCity() {
   if (selectedCities.length === 0) return null;
   return selectedCities[0].value;
 }
+
+// Add touch support for dropdowns with map interaction prevention
+document.addEventListener('DOMContentLoaded', function() {
+  const dropdowns = document.querySelectorAll('.dropdown');
+  
+  dropdowns.forEach(dropdown => {
+    const button = dropdown.querySelector('button');
+    const content = dropdown.querySelector('.dropdown-content');
+    
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Close other dropdowns
+      dropdowns.forEach(other => {
+        if (other !== dropdown) {
+          const otherContent = other.querySelector('.dropdown-content');
+          otherContent.style.display = 'none';
+          // Re-enable map interaction
+          if (map) {
+            map.dragging.enable();
+            map.scrollWheelZoom.enable();
+            map.touchZoom.enable();
+          }
+        }
+      });
+      
+      // Toggle current dropdown
+      const isVisible = content.style.display === 'block';
+      content.style.display = isVisible ? 'none' : 'block';
+      
+      // Disable/enable map interaction based on dropdown state
+      if (map) {
+        if (content.style.display === 'block') {
+          map.dragging.disable();
+          map.scrollWheelZoom.disable();
+          map.touchZoom.disable();
+        } else {
+          map.dragging.enable();
+          map.scrollWheelZoom.enable();
+          map.touchZoom.enable();
+        }
+      }
+    });
+    
+    // Prevent map interaction when touching dropdown content
+    content.addEventListener('touchstart', function(e) {
+      e.stopPropagation();
+    });
+    
+    content.addEventListener('touchmove', function(e) {
+      e.stopPropagation();
+    });
+    
+    content.addEventListener('touchend', function(e) {
+      e.stopPropagation();
+    });
+    
+    // Prevent map interaction when scrolling dropdown content
+    content.addEventListener('scroll', function(e) {
+      e.stopPropagation();
+    });
+  });
+  
+  // Close dropdowns when clicking outside and re-enable map
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown')) {
+      dropdowns.forEach(dropdown => {
+        dropdown.querySelector('.dropdown-content').style.display = 'none';
+      });
+      
+      // Re-enable map interaction
+      if (map) {
+        map.dragging.enable();
+        map.scrollWheelZoom.enable();
+        map.touchZoom.enable();
+      }
+    }
+  });
+});

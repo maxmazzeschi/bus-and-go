@@ -1,124 +1,227 @@
-#map {
-  height: 90vh;
-  position: relative;
+/* Mobile-first responsive design */
+* {
+  box-sizing: border-box;
 }
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+#map {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Enhanced Controls with Toggle */
 #controls {
   position: absolute;
   top: 10px;
   left: 10px;
+  right: 10px;
   z-index: 1000;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
 }
+
+#controls-header {
+  padding: 10px 15px;
+  border-bottom: 1px solid #e0e0e0;
+  background: rgba(0, 123, 255, 0.1);
+  border-radius: 8px 8px 0 0;
+}
+
+#controls-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 600;
+  color: #007bff;
+  cursor: pointer;
+  padding: 0;
+}
+
+#controls-toggle:hover {
+  color: #0056b3;
+}
+
+#controls-icon {
+  transition: transform 0.3s ease;
+  font-size: 14px;
+}
+
+#controls.collapsed #controls-icon {
+  transform: rotate(-90deg);
+}
+
+#controls-content {
+  padding: 15px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+#controls.collapsed #controls-content {
+  max-height: 0;
+  padding: 0 15px;
+  opacity: 0;
+}
+
+#controls.expanded #controls-content {
+  max-height: 500px;
+  opacity: 1;
+}
+
+/* Compact header when collapsed */
+#controls.collapsed {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+#controls.collapsed #controls-header {
+  border-bottom: none;
+  border-radius: 8px;
+}
+
+/* Mobile-friendly dropdowns - updated */
 .dropdown {
   position: relative;
-  display: inline-block;
+  margin-bottom: 10px;
+  width: 100%;
 }
-.dropdown-content {
-  display: none;
-  position: absolute;
+
+.dropdown button {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
   background-color: white;
-  min-width: 160px;
-  border: 1px solid #ddd;
-  z-index: 1001;
+  cursor: pointer;
+  text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dropdown button:hover,
+.dropdown button:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
   max-height: 200px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  z-index: 1001;
+  display: none;
 }
+
+/* Ensure dropdown labels are touch-friendly */
 .dropdown-content label {
   display: block;
-  padding: 5px;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
   cursor: pointer;
+  font-size: 16px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
 }
+
+.dropdown-content label:last-child {
+  border-bottom: none;
+}
+
 .dropdown-content label:hover {
-  background-color: #f1f1f1;
+  background-color: #f8f9fa;
 }
-.dropdown:hover .dropdown-content {
+
+.dropdown-content label:active {
+  background-color: #e3f2fd;
+}
+
+.dropdown-content input[type="checkbox"],
+.dropdown-content input[type="radio"] {
+  margin-right: 12px;
+  transform: scale(1.3);
+  min-width: 20px;
+  min-height: 20px;
+}
+
+/* Labels */
+label[for] {
   display: block;
-}
-
-/* Custom CSS for vehicle label and arrow */
-.vehicle-label {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(221, 235, 22, 0.7);
-  padding: 2px 2px;
-  border-radius: 3px;
-  font-size: 12px;
+  margin-bottom: 5px;
+  font-weight: 600;
   color: #333;
-}
-/* Bigger font size for mobile devices including iPhone 13 and newer */
-/* Apply bigger font size for all mobile devices */
-@media only screen and (pointer: coarse) {
-  .vehicle-label {
-    font-size: 24px;
-  }
-}
-
-/* Updated CSS for the arrow icon */
-.arrow-icon {
-  width: 20px;
-  height: 20px;
-  display: inline-block;
-  transform-origin: center;
-  z-index: 100;
-}
-
-/* Optional styling for better visibility */
-.arrow-svg {
-  fill: #ff5722;
-  stroke: #333;
-  stroke-width: 1px;
-}
-
-.timer {
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 5px 10px;
-  border-radius: 5px;
   font-size: 14px;
-  color: #333;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Position the GitHub link at the bottom-left of the map */
+/* Vehicle Stats Button */
+#vehicleStatsBtn {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+#vehicleStatsBtn:hover,
+#vehicleStatsBtn:active {
+  background-color: #0056b3;
+}
+
+/* GitHub link - mobile friendly */
 #github-link {
   position: absolute;
   bottom: 10px;
   left: 10px;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 5px 10px;
-  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 8px 12px;
+  border-radius: 6px;
   text-decoration: none;
   color: #007bff;
   font-size: 14px;
-  z-index: 1000; /* Ensure it appears above the map */
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
-#github-link:hover {
+#github-link:hover,
+#github-link:active {
   background-color: rgba(255, 255, 255, 1);
   color: #0056b3;
 }
 
-/* Vehicle Statistics Button */
-#vehicleStatsBtn {
-  margin-left: 10px;
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-#vehicleStatsBtn:hover {
-  background-color: #0056b3;
-}
-
-/* Popup Overlay */
+/* Vehicle Statistics Popup - Mobile */
 .popup-overlay {
   position: fixed;
   top: 0;
@@ -130,16 +233,18 @@
   justify-content: center;
   align-items: center;
   z-index: 2000;
+  padding: 20px;
 }
 
-/* Vehicle Statistics Container */
 .vehicle-stats-container {
   background-color: white;
   border-radius: 8px;
   padding: 20px;
+  width: 100%;
   max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -150,63 +255,137 @@
   color: #333;
 }
 
-/* Grid Styles */
+/* Grid Styles - Enhanced with horizontal separators */
 .vehicle-stats-grid {
   border: 1px solid #ddd;
   border-radius: 4px;
   overflow: hidden;
+  font-size: 14px;
 }
 
 .grid-header {
   display: flex;
   background-color: #f8f9fa;
   font-weight: bold;
+  border-bottom: 2px solid #dee2e6; /* Thicker separator after header */
 }
 
 .grid-row {
   display: flex;
-  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #dee2e6; /* Horizontal separator between rows */
+}
+
+.grid-row:last-child {
+  border-bottom: none; /* Remove border from last row */
+}
+
+.grid-row:nth-child(even) {
+  background-color: #f8f9fa; /* Alternate row colors for better readability */
+}
+
+.grid-row:hover {
+  background-color: #e3f2fd; /* Highlight row on hover */
+}
+
+.grid-cell {
+  flex: 1;
+  padding: 12px 8px; /* Slightly increased padding for better spacing */
+  text-align: center;
+  border-right: 1px solid #dee2e6; /* Vertical separator between cells */
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-cell:last-child {
+  border-right: none; /* Remove border from last cell */
+}
+
+/* Header cells styling */
+.grid-header .grid-cell {
+  font-weight: 600;
+  color: #495057;
+  background-color: transparent;
+}
+
+/* Optional: Add zebra striping for better visual separation */
+.grid-row:nth-child(odd) {
+  background-color: #ffffff;
 }
 
 .grid-row:nth-child(even) {
   background-color: #f8f9fa;
 }
 
-.grid-cell {
-  flex: 1;
-  padding: 8px 12px;
-  text-align: center;
-  border-right: 1px solid #ddd;
+/* Mobile responsive grid adjustments */
+@media (max-width: 480px) {
+  .grid-cell {
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+  
+  .vehicle-stats-grid {
+    font-size: 13px;
+  }
 }
 
-.grid-cell:last-child {
-  border-right: none;
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  #controls {
+    max-width: 400px;
+    right: auto;
+  }
+  
+  .dropdown {
+    margin-bottom: 15px;
+  }
+  
+  .dropdown-content {
+    max-height: 300px;
+  }
 }
 
-/* Stats Summary */
-.stats-summary {
-  margin: 15px 0;
-  padding: 10px;
-  background-color: #e9ecef;
-  border-radius: 4px;
+/* Desktop screens */
+@media (min-width: 1024px) {
+  #controls {
+    max-width: 350px;
+  }
 }
 
-.stats-summary p {
-  margin: 5px 0;
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .dropdown button {
+    padding: 15px;
+    font-size: 16px;
+  }
+  
+  .dropdown-content label {
+    padding: 15px;
+    font-size: 16px;
+  }
+  
+  #vehicleStatsBtn {
+    padding: 15px;
+    font-size: 16px;
+  }
 }
 
-/* Close Button */
-.close-btn {
+/* Prevent zoom on input focus (iOS) */
+input[type="checkbox"],
+input[type="radio"] {
+  font-size: 16px;
+}
+
+/* Smooth scrolling for better mobile experience */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Prevent body scroll when popup is open */
+body.popup-open {
+  overflow: hidden;
+  position: fixed;
   width: 100%;
-  padding: 10px;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.close-btn:hover {
-  background-color: #545b62;
 }

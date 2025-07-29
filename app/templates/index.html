@@ -2,6 +2,8 @@
 <html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>bus-and-go</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
@@ -10,25 +12,33 @@
   <script src="{{ url_for('static', filename='app.js') }}"></script>
   <div id="map">
     <div id="controls">
-        <label for="Country">Select Country:</label>
-        <div class="dropdown" onchange="onChangeCountry()">
-            <button>Country ▼</button>
-            <div id="countrySelector" class="dropdown-content">
-            </div>
+        <div id="controls-header">
+            <button id="controls-toggle" onclick="toggleControls()">
+                <span id="controls-icon">▼</span>
+                <span>Controls</span>
+            </button>
         </div>
-        <div class="dropdown" onchange="onChangeCity()">
-            <button>City ▼</button>
-            <div id="citySelector" class="dropdown-content">
+        <div id="controls-content">
+            <label for="Country">Select Country:</label>
+            <div class="dropdown" onchange="onChangeCountry()">
+                <button>Country ▼</button>
+                <div id="countrySelector" class="dropdown-content">
+                </div>
             </div>
-        </div>
-        <label for="routeSelector">Select Routes:</label>
-        <div class="dropdown" onchange="updateVehiclePositions()">
-            <button>Select Routes ▼</button>
-            <div id="routeSelector" class="dropdown-content">
-                <!-- Route options with checkboxes will be populated dynamically -->
+            <div class="dropdown" onchange="onChangeCity()">
+                <button>City ▼</button>
+                <div id="citySelector" class="dropdown-content">
+                </div>
             </div>
+            <label for="routeSelector">Select Routes:</label>
+            <div class="dropdown" onchange="updateVehiclePositions()">
+                <button>Select Routes ▼</button>
+                <div id="routeSelector" class="dropdown-content">
+                    <!-- Route options with checkboxes will be populated dynamically -->
+                </div>
+            </div>
+            <button id="vehicleStatsBtn" onclick="openVehicleStatsPopup()">Vehicle Stats</button>
         </div>
-        <button id="vehicleStatsBtn" onclick="openVehicleStatsPopup()">Vehicle Stats</button>
     </div>
     <!-- GitHub link positioned at the bottom-left -->
     <a href="https://github.com/maxmazzeschi/bus-and-go" target="_blank" id="github-link">View on GitHub</a>
