@@ -72,5 +72,4 @@ def get_stops_info():
 
 
 if __name__ == "__main__":
-        app.run(debug=False)
-
+    app.run(debug=False)
