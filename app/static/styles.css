@@ -389,3 +389,33 @@ body.popup-open {
   position: fixed;
   width: 100%;
 }
+
+/* Vehicle tooltip styling */
+.vehicle-tooltip {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  white-space: nowrap !important;
+}
+
+.vehicle-tooltip::before {
+  border-top-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Mobile-friendly tooltip */
+@media (max-width: 768px) {
+  .vehicle-tooltip {
+    font-size: 14px !important;
+    padding: 8px 12px !important;
+  }
+}
+
+/* Ensure tooltips appear above other elements */
+.leaflet-tooltip {
+  z-index: 1002 !important;
+}

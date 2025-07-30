@@ -66,7 +66,7 @@ def get_stops_info():
     east = float(request.args.get("east", 180))
     west = float(request.args.get("west", -180))
 
-    info = dataset.get_stops_info(north, south, east, west)
+    info = dataset.get_stops_in_area(north, south, east, west)
 
     return jsonify(info)
 

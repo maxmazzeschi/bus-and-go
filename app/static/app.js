@@ -159,7 +159,7 @@ function updateVehiclePositions() {
       vehicleLabels = {};
 
       data.vehicles.forEach((vehicle) => {
-        const { lat, lon, route_id, bearing, speed, vehicle_id } = vehicle;
+        const { lat, lon, route_id, bearing, speed, vehicle_id, last_stop_name } = vehicle;
 
         const roundedSpeed = Math.round(speed);
         const label = L.divIcon({
@@ -170,6 +170,11 @@ function updateVehiclePositions() {
         });
 
         const labelMarker = L.marker([lat, lon], { icon: label }).addTo(map);
+
+        // Create tooltip content
+        const tooltipContent = last_stop_name ? 
+          `Last Stop: ${last_stop_name}` : 
+          'Last Stop: Unknown';
 
         if (bearing > 0) {
           const arrowHtml = `
@@ -186,6 +191,14 @@ function updateVehiclePositions() {
           });
 
           const arrowMarker = L.marker([lat, lon], { icon: arrow }).addTo(map);
+          
+          // Add tooltip to arrow marker
+          arrowMarker.bindTooltip(tooltipContent, {
+            direction: 'top',
+            offset: [0, -15],
+            className: 'vehicle-tooltip'
+          });
+          
           vehicleMarkers[vehicle_id] = arrowMarker;
         } else {
           const marker = L.circleMarker([lat, lon], {
@@ -194,8 +207,23 @@ function updateVehiclePositions() {
             fillColor: "#ff5722",
             fillOpacity: 0.7,
           }).addTo(map);
+          
+          // Add tooltip to circle marker
+          marker.bindTooltip(tooltipContent, {
+            direction: 'top',
+            offset: [0, -15],
+            className: 'vehicle-tooltip'
+          });
+          
           vehicleMarkers[vehicle_id] = marker;
         }
+
+        // Add tooltip to label marker as well
+        labelMarker.bindTooltip(tooltipContent, {
+          direction: 'top',
+          offset: [0, -25],
+          className: 'vehicle-tooltip'
+        });
 
         vehicleLabels[vehicle_id] = labelMarker;
       });
