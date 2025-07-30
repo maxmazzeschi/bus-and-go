@@ -137,7 +137,6 @@ body {
 
 /* Ensure dropdown labels are touch-friendly */
 .dropdown-content label {
-  display: block;
   padding: 15px;
   border-bottom: 1px solid #eee;
   cursor: pointer;
@@ -277,10 +276,6 @@ label[for] {
 
 .grid-row:last-child {
   border-bottom: none; /* Remove border from last row */
-}
-
-.grid-row:nth-child(even) {
-  background-color: #f8f9fa; /* Alternate row colors for better readability */
 }
 
 .grid-row:hover {

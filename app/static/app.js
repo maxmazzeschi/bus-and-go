@@ -589,20 +589,6 @@ function compareRouteId(a, b) {
   return 0;
 }
 
-// Populate route selector
-function populateRouteSelector(routeIds) {
-  const routeSelector = document.getElementById("routeSelector");
-  routeSelector.innerHTML = "";
-  routeIds.sort(compareRouteId).forEach((routeId) => {
-    const label = document.createElement("label");
-    label.innerHTML = `
-      <input type="checkbox" value="${routeId}" />
-      ${routeId}
-    `;
-    routeSelector.appendChild(label);
-  });
-}
-
 // Fetch available routes
 function fetchAvailableRoutes() {
   const datasetId = getCurrentCity();
@@ -696,20 +682,6 @@ function getCurrentCountry() {
 // City change event
 function onChangeCity() {
   fetchAvailableRoutes();
-}
-
-// City selected event
-function citySelected(event) {
-  if (!event.target.checked) return;
-
-  const citySelector = document.getElementById("citySelector");
-  const checkboxes = citySelector.querySelectorAll('input[type="checkbox"]:checked');
-
-  checkboxes.forEach((checkbox) => {
-    if (checkbox.checked && checkbox !== event.target) {
-      checkbox.checked = false;
-    }
-  });
 }
 
 function populateCitySelector(cities) {
