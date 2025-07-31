@@ -1,7 +1,29 @@
 from flask import Flask, jsonify, render_template, request
 from public_transport_datasets.datasets_provider import DatasetsProvider
+import psutil
+import os
+import threading
+import time
 
 app = Flask(__name__)
+
+def monitor_memory():
+    """Monitor memory usage in a separate thread"""
+    while True:
+        process = psutil.Process(os.getpid())
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        # Log memory usage with thresholds
+        if memory_mb > 512:  # 512MB threshold
+            print(f"⚠️⚠️ Memory usage: {memory_mb:.2f}MB (exceeds 512MB limit)")
+        elif memory_mb > 256:  # 256MB warning threshold
+            print(f"⚠️ Memory usage: {memory_mb:.2f}MB (exceeds 256MB limit)")
+        else:
+            print(f"✅ Memory usage: {memory_mb:.2f}MB (within limits)")
+        time.sleep(10)  # Check every 10 seconds
+
+# Start monitoring thread
+monitoring_thread = threading.Thread(target=monitor_memory, daemon=True)
+monitoring_thread.start()
 
 
 @app.route("/")
