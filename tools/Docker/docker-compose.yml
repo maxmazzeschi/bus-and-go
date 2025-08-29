@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  bus-and-go:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logs:/logs
+    deploy:
+      resources:
+        limits:
+          memory: 640M
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
