@@ -177,3 +177,6 @@ node_modules/
 !/datasets/*.sql
 
 private/
+tools/output/basic_report.html
+tools/output/basic_report.json
+tools/output/zap.yaml
