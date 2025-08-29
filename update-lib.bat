@@ -1,1 +1,2 @@
+pip uninstall -y public_transport_datasets 
 pip install public_transport_datasets --trusted-host 10.10.0.12 --upgrade
