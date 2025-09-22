@@ -180,3 +180,9 @@ private/
 tools/output/basic_report.html
 tools/output/basic_report.json
 tools/output/zap.yaml
+tools/output/*.html
+tools/output/*.json
+tools/output/*.xml
+tools/output/*.md
+tools/output/*.zap
+tools/output/*.conf
