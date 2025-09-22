@@ -61,7 +61,7 @@ CMD ["gunicorn", \
      "--timeout", "120", \
      "--access-logfile", "/logs/access.log", \
      "--error-logfile", "/logs/error.log", \
-     "--log-level", "debug", \
+     "--log-level", "info", \
      "--capture-output", \
      "--enable-stdio-inheritance", \
      "app:app"]
