@@ -591,8 +591,12 @@ function compareRouteId(a, b) {
 
 // Fetch available routes
 function fetchAvailableRoutes() {
+  showCenteredLoadingMessage(); // Show loading message
   const datasetId = getCurrentCity();
-  if (!datasetId) return;
+  if (!datasetId) {
+    hideCenteredLoadingMessage();
+    return;
+  }
 
   const params = new URLSearchParams({ datasetId });
 
@@ -618,6 +622,9 @@ function fetchAvailableRoutes() {
           updateVehiclePositions();
         }, 50);
       }
+    })
+    .finally(() => {
+      hideCenteredLoadingMessage(); // Hide loading message
     });
 }
 
@@ -837,3 +844,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+
+function showCenteredLoadingMessage() {
+  let loadingDiv = document.getElementById('centeredLoadingMessage');
+  if (!loadingDiv) {
+    loadingDiv = document.createElement('div');
+    loadingDiv.id = 'centeredLoadingMessage';
+    loadingDiv.style.position = 'fixed';
+    loadingDiv.style.top = '50%';
+    loadingDiv.style.left = '50%';
+    loadingDiv.style.transform = 'translate(-50%, -50%)';
+    loadingDiv.style.background = 'rgba(255,255,255,0.95)';
+    loadingDiv.style.padding = '30px 50px';
+    loadingDiv.style.borderRadius = '12px';
+    loadingDiv.style.boxShadow = '0 2px 16px rgba(0,0,0,0.2)';
+    loadingDiv.style.zIndex = '9999';
+    loadingDiv.style.fontSize = '1.5em';
+    loadingDiv.style.textAlign = 'center';
+    loadingDiv.innerText = 'Loading...';
+    document.body.appendChild(loadingDiv);
+  } else {
+    loadingDiv.style.display = 'block';
+  }
+}
+
+function hideCenteredLoadingMessage() {
+  const loadingDiv = document.getElementById('centeredLoadingMessage');
+  if (loadingDiv) {
+    loadingDiv.style.display = 'none';
+  }
+}
