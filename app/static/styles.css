@@ -70,6 +70,7 @@ body {
   padding: 15px;
   transition: all 0.3s ease;
   overflow: hidden;
+  min-height: 540px;
 }
 
 #controls.collapsed #controls-content {
@@ -128,7 +129,7 @@ body {
   border: 1px solid #ccc;
   border-top: none;
   border-radius: 0 0 6px 6px;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   z-index: 1001;
