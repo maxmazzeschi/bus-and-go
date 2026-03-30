@@ -2,10 +2,11 @@ let map;
 let vehicleMarkers = {};
 let vehicleLabels = {};
 let stopsMarkers = []; // Changed to a list
-let updateInterval = 60; // Update every 60 seconds
+let updateInterval = 30; // Update every 30 seconds
 let remainingTime = updateInterval;
 let timerInterval;
 let StopsData = [];
+let mobileRouteDialValue = '';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -13,6 +14,218 @@ const STORAGE_KEYS = {
   CITY: 'selected_city',
   ROUTES: 'selected_routes'
 };
+
+function isMobileLayout() {
+  return document.body?.dataset?.uiMode === 'mobile';
+}
+
+function getSelectedLabelText(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return null;
+
+  const checkedInput = container.querySelector('input[type="checkbox"]:checked');
+  if (!checkedInput) return null;
+
+  return checkedInput.parentElement.textContent.trim();
+}
+
+function getSelectedRoutesCount() {
+  return document.querySelectorAll('#routeSelector input[type="checkbox"]:checked').length;
+}
+
+function getRouteCheckboxes() {
+  return Array.from(document.querySelectorAll('#routeSelector input[type="checkbox"]'));
+}
+
+function getVisibleRouteLabels() {
+  return Array.from(document.querySelectorAll('#routeSelector .route-option')).filter((label) => {
+    return label.style.display !== 'none';
+  });
+}
+
+function getRouteDialDisplayElement() {
+  return document.getElementById('routeDialDisplay');
+}
+
+function setDropdownButtonText(containerId, text) {
+  const container = document.getElementById(containerId);
+  const dropdown = container ? container.closest('.dropdown') : null;
+  const button = dropdown ? dropdown.querySelector('button') : null;
+
+  if (button) {
+    button.textContent = text;
+  }
+}
+
+function syncDropdownButtonLabels() {
+  const selectedCountry = getSelectedLabelText('countrySelector');
+  const selectedCity = getSelectedLabelText('citySelector');
+  const selectedRoutesCount = getSelectedRoutesCount();
+
+  setDropdownButtonText('countrySelector', selectedCountry ? `Country: ${selectedCountry}` : 'Country');
+  setDropdownButtonText('citySelector', selectedCity ? `City: ${selectedCity}` : 'City');
+  setDropdownButtonText(
+    'routeSelector',
+    selectedRoutesCount > 0 ? `Routes: ${selectedRoutesCount} selected` : 'All routes'
+  );
+}
+
+function updateSelectionSummary() {
+  const summaryElement = document.getElementById('selectionSummary');
+  if (!summaryElement) return;
+
+  const selectedCountry = getSelectedLabelText('countrySelector');
+  const selectedCity = getSelectedLabelText('citySelector');
+  const selectedRoutesCount = getSelectedRoutesCount();
+
+  if (!selectedCountry && !selectedCity) {
+    summaryElement.textContent = 'Choose a country and city to start.';
+    return;
+  }
+
+  const summaryParts = [];
+  if (selectedCountry) summaryParts.push(selectedCountry);
+  if (selectedCity) summaryParts.push(selectedCity);
+  summaryParts.push(
+    selectedRoutesCount > 0 ? `${selectedRoutesCount} routes selected` : 'All routes'
+  );
+
+  summaryElement.textContent = summaryParts.join(' • ');
+}
+
+function syncSelectionUi() {
+  syncDropdownButtonLabels();
+  updateSelectionSummary();
+  updateRouteSelectionMeta();
+}
+
+function updateRouteSelectionMeta() {
+  const metaElement = document.getElementById('routeSelectionMeta');
+  if (!metaElement) return;
+
+  const totalRoutes = getRouteCheckboxes().length;
+  const selectedRoutes = getSelectedRoutesCount();
+  const visibleRoutes = getVisibleRouteLabels().length;
+  const dialSuffix = isMobileLayout() && mobileRouteDialValue
+    ? ` • dial ${mobileRouteDialValue}`
+    : '';
+
+  metaElement.textContent = `${selectedRoutes} selected • ${visibleRoutes} visible • ${totalRoutes} total${dialSuffix}`;
+}
+
+function filterMobileRouteOptions() {
+  const query = mobileRouteDialValue.trim().toLowerCase();
+  const routeLabels = Array.from(document.querySelectorAll('#routeSelector .route-option'));
+
+  routeLabels.forEach((label) => {
+    const routeId = label.dataset.routeId || label.textContent.trim();
+    const matches = query === '' || routeId.toLowerCase().startsWith(query);
+    label.style.display = matches ? 'flex' : 'none';
+  });
+
+  updateRouteSelectionMeta();
+}
+
+function renderMobileRouteDialValue() {
+  const displayElement = getRouteDialDisplayElement();
+  if (!displayElement) return;
+
+  if (mobileRouteDialValue) {
+    displayElement.textContent = mobileRouteDialValue;
+    displayElement.classList.add('route-dial-active');
+  } else {
+    displayElement.textContent = 'Tap digits';
+    displayElement.classList.remove('route-dial-active');
+  }
+}
+
+function appendRouteDialDigit(digit) {
+  mobileRouteDialValue += String(digit);
+  renderMobileRouteDialValue();
+  filterMobileRouteOptions();
+}
+
+function backspaceRouteDial() {
+  mobileRouteDialValue = mobileRouteDialValue.slice(0, -1);
+  renderMobileRouteDialValue();
+  filterMobileRouteOptions();
+}
+
+function clearRouteDial() {
+  mobileRouteDialValue = '';
+  renderMobileRouteDialValue();
+  filterMobileRouteOptions();
+}
+
+function clearAllRouteSelections() {
+  getRouteCheckboxes().forEach((checkbox) => {
+    checkbox.checked = false;
+  });
+
+  saveRouteSelections();
+  updateVehiclePositions();
+}
+
+function setRoutePickerOpenState(isOpen) {
+  const controls = document.getElementById('controls');
+  if (!controls || !isMobileLayout()) return;
+
+  controls.classList.toggle('route-picker-open', isOpen);
+}
+
+function closeAllDropdowns() {
+  const dropdownContainers = document.querySelectorAll('.dropdown');
+  dropdownContainers.forEach((dropdown) => {
+    dropdown.classList.remove('dropdown-open');
+  });
+
+  setRoutePickerOpenState(false);
+
+  const dropdowns = document.querySelectorAll('.dropdown-content');
+  dropdowns.forEach((dropdown) => {
+    dropdown.style.display = 'none';
+  });
+}
+
+function setMapInteractionEnabled(enabled) {
+  if (!map) return;
+
+  if (enabled) {
+    map.dragging.enable();
+    map.scrollWheelZoom.enable();
+    map.touchZoom.enable();
+    return;
+  }
+
+  map.dragging.disable();
+  map.scrollWheelZoom.disable();
+  map.touchZoom.disable();
+}
+
+function updateMobileControlsButton() {
+  const button = document.getElementById('mobileFiltersBtn');
+  const controls = document.getElementById('controls');
+  if (!button || !controls) return;
+
+  button.textContent = controls.classList.contains('collapsed') ? 'Filters' : 'Close';
+}
+
+function closeControlsPanel() {
+  const controls = document.getElementById('controls');
+  const icon = document.getElementById('controls-icon');
+  if (!controls || controls.classList.contains('collapsed')) return;
+
+  controls.classList.add('collapsed');
+  controls.classList.remove('expanded');
+  if (icon) {
+    icon.textContent = '▲';
+  }
+
+  closeAllDropdowns();
+  setMapInteractionEnabled(true);
+  localStorage.setItem('controlsExpanded', 'false');
+  updateMobileControlsButton();
+}
 
 // Initialize the map
 function initializeMap() {
@@ -81,7 +294,7 @@ function updateVehiclePositions() {
   const zoom = map.getZoom();
   console.log("Zoom level: " + zoom);
 
-  let drawStopMarkers = zoom >= 14;
+  let drawStopMarkers = zoom >= 14 && !isMobileLayout();
 
   if (!drawStopMarkers) {
     console.log("Zoom level is too low, removing stop markers");
@@ -163,10 +376,10 @@ function updateVehiclePositions() {
 
         const roundedSpeed = Math.round(speed);
         const label = L.divIcon({
-          className: "vehicle-label",
-          html: `${route_id}${roundedSpeed > 0 ? `@${roundedSpeed} Km/h` : ""}`,
-          iconSize: roundedSpeed > 0 ? [90, 15] : [30, 15],
-          iconAnchor: [-10, 10],
+          className: '',
+          html: `<div class="vehicle-label">${route_id}${roundedSpeed > 0 ? `@${roundedSpeed} Km/h` : ""}</div>`,
+          iconSize: [0, 0],
+          iconAnchor: [0, 0],
         });
 
         const labelMarker = L.marker([lat, lon], { icon: label }).addTo(map);
@@ -280,6 +493,7 @@ function restoreSelections() {
       const countryCheckbox = document.querySelector(`#countrySelector input[value="${savedCountry}"]`);
       if (countryCheckbox) {
         countryCheckbox.checked = true;
+        syncSelectionUi();
         fetchAvailableCities();
       }
     }, 100);
@@ -292,6 +506,7 @@ function restoreSelections() {
       const cityCheckbox = document.querySelector(`#citySelector input[value="${savedCity}"]`);
       if (cityCheckbox) {
         cityCheckbox.checked = true;
+        syncSelectionUi();
         fetchAvailableRoutes();
       }
     }, 500);
@@ -307,6 +522,7 @@ function restoreSelections() {
           routeCheckbox.checked = true;
         }
       });
+      syncSelectionUi();
       updateVehiclePositions();
     }, 1000);
   }
@@ -331,6 +547,7 @@ function countrySelected(event) {
   // Clear city and route selections when country changes
   saveSelection(STORAGE_KEYS.CITY, null);
   saveSelection(STORAGE_KEYS.ROUTES, []);
+  syncSelectionUi();
 }
 
 // Updated city selected event
@@ -351,14 +568,81 @@ function citySelected(event) {
   
   // Clear route selections when city changes
   saveSelection(STORAGE_KEYS.ROUTES, []);
+  syncSelectionUi();
 }
 
 // Updated route selector population with event listeners
 function populateRouteSelector(routeIds) {
   const routeSelector = document.getElementById("routeSelector");
   routeSelector.innerHTML = "";
+
+  let routeList = routeSelector;
+  if (isMobileLayout()) {
+    mobileRouteDialValue = '';
+    routeSelector.innerHTML = `
+      <div id="routeSelectorList" class="route-options-list"></div>
+      <div class="route-tools">
+        <div id="routeSelectionMeta" class="route-selection-meta">0 selected • 0 visible • 0 total</div>
+        <div class="route-dial-block">
+          <div class="route-dial-label">Dial route number</div>
+          <div id="routeDialDisplay" class="route-dial-display">Tap digits</div>
+        </div>
+        <div class="route-dialpad">
+          <button type="button" class="route-digit-btn" data-route-digit="1">1</button>
+          <button type="button" class="route-digit-btn" data-route-digit="2">2</button>
+          <button type="button" class="route-digit-btn" data-route-digit="3">3</button>
+          <button type="button" class="route-digit-btn" data-route-digit="4">4</button>
+          <button type="button" class="route-digit-btn" data-route-digit="5">5</button>
+          <button type="button" class="route-digit-btn" data-route-digit="6">6</button>
+          <button type="button" class="route-digit-btn" data-route-digit="7">7</button>
+          <button type="button" class="route-digit-btn" data-route-digit="8">8</button>
+          <button type="button" class="route-digit-btn" data-route-digit="9">9</button>
+          <button type="button" class="route-digit-btn route-digit-action" data-route-action="backspace">⌫</button>
+          <button type="button" class="route-digit-btn" data-route-digit="0">0</button>
+          <button type="button" class="route-digit-btn route-digit-action" data-route-action="reset-dial">C</button>
+        </div>
+        <div class="route-actions">
+          <button type="button" class="route-action-btn" data-route-action="clear-all">Clear selected</button>
+          <button type="button" class="route-action-btn route-action-secondary" data-route-action="reset-dial">Reset dial</button>
+        </div>
+      </div>
+    `;
+
+    routeList = document.getElementById('routeSelectorList');
+    const actionButtons = routeSelector.querySelectorAll('[data-route-action]');
+    const digitButtons = routeSelector.querySelectorAll('[data-route-digit]');
+
+    actionButtons.forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const action = button.dataset.routeAction;
+        if (action === 'backspace') {
+          backspaceRouteDial();
+        } else if (action === 'reset-dial') {
+          clearRouteDial();
+        } else if (action === 'clear-all') {
+          clearAllRouteSelections();
+        }
+      });
+    });
+
+    digitButtons.forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        appendRouteDialDigit(button.dataset.routeDigit);
+      });
+    });
+
+    renderMobileRouteDialValue();
+  }
+
   routeIds.sort(compareRouteId).forEach((routeId) => {
     const label = document.createElement("label");
+    label.className = 'route-option';
+    label.dataset.routeId = routeId;
     label.innerHTML = `
       <input type="checkbox" value="${routeId}" />
       ${routeId}
@@ -368,8 +652,14 @@ function populateRouteSelector(routeIds) {
     const checkbox = label.querySelector('input');
     checkbox.addEventListener('change', saveRouteSelections);
     
-    routeSelector.appendChild(label);
+    routeList.appendChild(label);
   });
+
+  if (isMobileLayout()) {
+    filterMobileRouteOptions();
+  }
+
+  syncSelectionUi();
 }
 
 // Save route selections
@@ -379,6 +669,7 @@ function saveRouteSelections() {
   ).map((checkbox) => checkbox.value);
   
   saveSelection(STORAGE_KEYS.ROUTES, selectedRoutes);
+  syncSelectionUi();
 }
 
 // Open vehicle statistics popup
@@ -517,35 +808,23 @@ function closeVehicleStatsPopup() {
 function toggleControls() {
   const controls = document.getElementById('controls');
   const icon = document.getElementById('controls-icon');
+  if (!controls) return;
   
   if (controls.classList.contains('collapsed')) {
     controls.classList.remove('collapsed');
     controls.classList.add('expanded');
-    icon.textContent = '▼';
+    if (icon) {
+      icon.textContent = '▼';
+    }
     
     // Save state
     localStorage.setItem('controlsExpanded', 'true');
   } else {
-    controls.classList.add('collapsed');
-    controls.classList.remove('expanded');
-    icon.textContent = '▲';
-    
-    // Close any open dropdowns when collapsing
-    const dropdowns = document.querySelectorAll('.dropdown-content');
-    dropdowns.forEach(dropdown => {
-      dropdown.style.display = 'none';
-    });
-    
-    // Re-enable map interaction
-    if (map) {
-      map.dragging.enable();
-      map.scrollWheelZoom.enable();
-      map.touchZoom.enable();
-    }
-    
-    // Save state
-    localStorage.setItem('controlsExpanded', 'false');
+    closeControlsPanel();
+    return;
   }
+
+  updateMobileControlsButton();
 }
 
 // Initialize controls state
@@ -553,14 +832,23 @@ function initializeControlsState() {
   const controls = document.getElementById('controls');
   const icon = document.getElementById('controls-icon');
   const savedState = localStorage.getItem('controlsExpanded');
+  if (!controls) return;
   
-  if (savedState === 'false') {
+  if (savedState === 'false' || (savedState === null && isMobileLayout())) {
     controls.classList.add('collapsed');
-    icon.textContent = '▲';
+    controls.classList.remove('expanded');
+    if (icon) {
+      icon.textContent = '▲';
+    }
   } else {
     controls.classList.add('expanded');
-    icon.textContent = '▼';
+    controls.classList.remove('collapsed');
+    if (icon) {
+      icon.textContent = '▼';
+    }
   }
+
+  updateMobileControlsButton();
 }
 
 // Main window load
@@ -571,6 +859,7 @@ window.onload = () => {
   document
     .getElementById("routeSelector")
     .addEventListener("change", updateVehiclePositions);
+  syncSelectionUi();
   
   // Restore saved selections after a short delay to ensure DOM is ready
   setTimeout(restoreSelections, 200);
@@ -608,6 +897,7 @@ function fetchAvailableRoutes() {
       const lat = (route_info.min_latitude + route_info.max_latitude) / 2;
       const lon = (route_info.min_longitude + route_info.max_longitude) / 2;
       map.setView([lat, lon], 12);
+      syncSelectionUi();
       
       // Restore route selections after population
       const savedRoutes = loadSelection(STORAGE_KEYS.ROUTES);
@@ -619,6 +909,7 @@ function fetchAvailableRoutes() {
               routeCheckbox.checked = true;
             }
           });
+          syncSelectionUi();
           updateVehiclePositions();
         }, 50);
       }
@@ -648,6 +939,8 @@ function populateCountrySelector(countries) {
     `;
     countrySelector.appendChild(label);
   });
+
+  syncSelectionUi();
 }
 
 // Fetch available countries
@@ -656,6 +949,7 @@ function fetchAvailableCountries() {
     .then((response) => response.json())
     .then((countries) => {
       populateCountrySelector(countries);
+      syncSelectionUi();
       // Restore country selection after population
       const savedCountry = loadSelection(STORAGE_KEYS.COUNTRY);
       if (savedCountry) {
@@ -663,6 +957,7 @@ function fetchAvailableCountries() {
           const countryCheckbox = document.querySelector(`#countrySelector input[value="${savedCountry}"]`);
           if (countryCheckbox) {
             countryCheckbox.checked = true;
+            syncSelectionUi();
             fetchAvailableCities();
           }
         }, 50);
@@ -725,6 +1020,8 @@ function populateCitySelector(cities) {
     `;
     citySelector.appendChild(label);
   });
+
+  syncSelectionUi();
 }
 
 // Fetch available cities
@@ -735,6 +1032,7 @@ function fetchAvailableCities() {
     .then((response) => response.json())
     .then((cities) => {
       populateCitySelector(cities);
+      syncSelectionUi();
       // Restore city selection after population
       const savedCity = loadSelection(STORAGE_KEYS.CITY);
       if (savedCity) {
@@ -742,6 +1040,7 @@ function fetchAvailableCities() {
           const cityCheckbox = document.querySelector(`#citySelector input[value="${savedCity}"]`);
           if (cityCheckbox) {
             cityCheckbox.checked = true;
+            syncSelectionUi();
             fetchAvailableRoutes();
           }
         }, 50);
@@ -782,31 +1081,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (other !== dropdown) {
           const otherContent = other.querySelector('.dropdown-content');
           otherContent.style.display = 'none';
-          // Re-enable map interaction
-          if (map) {
-            map.dragging.enable();
-            map.scrollWheelZoom.enable();
-            map.touchZoom.enable();
+          other.classList.remove('dropdown-open');
+          if (otherContent.id === 'routeSelector') {
+            setRoutePickerOpenState(false);
           }
+          // Re-enable map interaction
+          setMapInteractionEnabled(true);
         }
       });
       
       // Toggle current dropdown
       const isVisible = content.style.display === 'block';
       content.style.display = isVisible ? 'none' : 'block';
+      dropdown.classList.toggle('dropdown-open', !isVisible);
+      if (content.id === 'routeSelector') {
+        setRoutePickerOpenState(!isVisible);
+      } else {
+        setRoutePickerOpenState(false);
+      }
       
       // Disable/enable map interaction based on dropdown state
-      if (map) {
-        if (content.style.display === 'block') {
-          map.dragging.disable();
-          map.scrollWheelZoom.disable();
-          map.touchZoom.disable();
-        } else {
-          map.dragging.enable();
-          map.scrollWheelZoom.enable();
-          map.touchZoom.enable();
-        }
-      }
+      setMapInteractionEnabled(content.style.display !== 'block');
     });
     
     // Prevent map interaction when touching dropdown content
@@ -831,16 +1126,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Close dropdowns when clicking outside and re-enable map
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.dropdown')) {
-      dropdowns.forEach(dropdown => {
-        dropdown.querySelector('.dropdown-content').style.display = 'none';
-      });
+      closeAllDropdowns();
       
       // Re-enable map interaction
-      if (map) {
-        map.dragging.enable();
-        map.scrollWheelZoom.enable();
-        map.touchZoom.enable();
-      }
+      setMapInteractionEnabled(true);
     }
   });
 });

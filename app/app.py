@@ -1,11 +1,20 @@
+import os
+from datetime import datetime, timezone
+
 from flask import Flask, jsonify, render_template, request
 from public_transport_datasets.datasets_provider import DatasetsProvider
 
 app = Flask(__name__)
 
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/mobile")
+def mobile_index():
+    return render_template("mobile.html")
 
 
 @app.route("/get_vehicles_position")
@@ -24,6 +33,14 @@ def get_vehicles_position():
     filtered_vehicles = dataset.get_vehicles_position(
         north, south, east, west, selected_routes
     )
+    last_update = filtered_vehicles.get("last_update")
+    if last_update is not None:
+        last_update_human = datetime.fromtimestamp(
+            float(last_update), tz=timezone.utc
+        ).strftime("%Y-%m-%d %H:%M:%S UTC")
+        print(f"last update timestamp: {last_update} ({last_update_human})")
+    else:
+        print("last update timestamp: missing")
     return jsonify(filtered_vehicles)
 
 
@@ -71,4 +88,4 @@ def get_stops_info():
 
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=False)

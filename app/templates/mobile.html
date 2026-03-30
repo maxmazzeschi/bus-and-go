@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>bus-and-go mobile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='mobile.css') }}" />
+</head>
+<body data-ui-mode="mobile">
+  <div id="map">
+    <div class="mobile-topbar">
+      <div class="mobile-branding">
+        <span class="mobile-eyebrow">bus-and-go</span>
+        <strong>Track buses on the move</strong>
+      </div>
+      <a class="mobile-topbar-link" href="/">Desktop UI</a>
+    </div>
+
+    <div id="selectionSummary" class="selection-summary">
+      Choose a country and city to start.
+    </div>
+
+    <div id="controls" class="mobile-sheet collapsed">
+      <div id="controls-header">
+        <button id="controls-toggle" type="button" onclick="toggleControls()">
+          <span class="sheet-copy">
+            <span class="sheet-handle" aria-hidden="true"></span>
+            <span class="sheet-title">Filters</span>
+            <span class="sheet-subtitle">Country, city, and route selection</span>
+          </span>
+          <span id="controls-icon">▲</span>
+        </button>
+      </div>
+
+      <div id="controls-content">
+        <section id="countrySection" class="mobile-section">
+          <label for="Country">Country</label>
+          <div class="dropdown" onchange="onChangeCountry()">
+            <button type="button">Country</button>
+            <div id="countrySelector" class="dropdown-content"></div>
+          </div>
+        </section>
+
+        <section id="citySection" class="mobile-section">
+          <label for="City">City</label>
+          <div class="dropdown" onchange="onChangeCity()">
+            <button type="button">City</button>
+            <div id="citySelector" class="dropdown-content"></div>
+          </div>
+        </section>
+
+        <section id="routeSection" class="mobile-section">
+          <label for="routeSelector">Routes</label>
+          <div class="dropdown" onchange="updateVehiclePositions()">
+            <button type="button">All routes</button>
+            <div id="routeSelector" class="dropdown-content"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="mobile-fab-group">
+      <button id="vehicleStatsBtn" class="map-fab map-fab-secondary" type="button" onclick="openVehicleStatsPopup()">
+        Stats
+      </button>
+      <button id="mobileFiltersBtn" class="map-fab map-fab-primary" type="button" onclick="toggleControls()">
+        Filters
+      </button>
+    </div>
+
+    <a href="https://github.com/maxmazzeschi/bus-and-go" target="_blank" id="github-link">GitHub</a>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
