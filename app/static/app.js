@@ -372,22 +372,29 @@ function updateVehiclePositions() {
       vehicleLabels = {};
 
       data.vehicles.forEach((vehicle) => {
-        const { lat, lon, route_id, bearing, speed, vehicle_id, last_stop_name } = vehicle;
+        const {
+          lat,
+          lon,
+          route_id,
+          bearing,
+          speed,
+          vehicle_id,
+          last_stop_name,
+        } = vehicle;
 
         const roundedSpeed = Math.round(speed);
         const label = L.divIcon({
           className: '',
-          html: `<div class="vehicle-label">${route_id}${roundedSpeed > 0 ? `@${roundedSpeed} Km/h` : ""}</div>`,
+          html: `<div class="vehicle-label">${route_id} ${last_stop_name} ${roundedSpeed > 0 ? `@${roundedSpeed} Km/h` : ""}</div>`,
           iconSize: [0, 0],
           iconAnchor: [0, 0],
         });
 
         const labelMarker = L.marker([lat, lon], { icon: label }).addTo(map);
 
-        // Create tooltip content
-        const tooltipContent = last_stop_name ? 
-          `Last Stop: ${last_stop_name}` : 
-          'Last Stop: Unknown';
+        const tooltipContent = last_stop_name
+          ? `Last Stop: ${last_stop_name}`
+          : 'Last Stop: Unknown';
 
         if (bearing > 0) {
           const arrowHtml = `
