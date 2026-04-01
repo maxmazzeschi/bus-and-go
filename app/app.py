@@ -1,19 +1,48 @@
 import os
 from datetime import datetime, timezone
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 from public_transport_datasets.datasets_provider import DatasetsProvider
 
 app = Flask(__name__)
 
+MOBILE_USER_AGENT_TOKENS = (
+    "android",
+    "iphone",
+    "ipad",
+    "ipod",
+    "mobile",
+    "opera mini",
+    "iemobile",
+)
+
+
+def get_requested_ui_mode():
+    ui_mode = request.args.get("view", "").strip().lower()
+    if ui_mode in {"desktop", "mobile"}:
+        return ui_mode
+    return None
+
+
+def is_mobile_request():
+    user_agent = request.headers.get("User-Agent", "").lower()
+    return any(token in user_agent for token in MOBILE_USER_AGENT_TOKENS)
+
 
 @app.route("/")
 def index():
+    requested_ui_mode = get_requested_ui_mode()
+    if requested_ui_mode == "mobile" or (
+        requested_ui_mode is None and is_mobile_request()
+    ):
+        return redirect(url_for("mobile_index"))
     return render_template("index.html")
 
 
 @app.route("/mobile")
 def mobile_index():
+    if get_requested_ui_mode() == "desktop":
+        return redirect(url_for("index", view="desktop"))
     return render_template("mobile.html")
 
 
